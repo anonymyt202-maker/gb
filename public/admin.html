@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GiftBot - Admin Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h1 {
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 12px;
+    }
+
+    .sidebar-menu button {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu button:hover,
+    .sidebar-menu button.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #667eea;
+    }
+
+    .admin-info {
+      text-align: right;
+    }
+
+    .admin-info p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dashboard */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card h3 {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    /* Table */
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .table-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h3 {
+      color: #667eea;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f9f9f9;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 1px solid #eee;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+      background: #f9f9f9;
+    }
+
+    /* Forms */
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-danger {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* Search */
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #667eea;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .badge-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .sidebar-menu {
+        display: flex;
+        gap: 10px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h1>⚙️ Admin Panel</h1>
+      <ul class="sidebar-menu">
+        <li><button class="nav-btn active" onclick="switchSection('dashboard')">📊 Dashboard</button></li>
+        <li><button class="nav-btn" onclick="switchSection('users')">👥 Users</button></li>
+        <li><button class="nav-btn" onclick="switchSection('gifts')">🎁 Gifts</button></li>
+        <li><button class="nav-btn" onclick="switchSection('cases')">📦 Cases</button></li>
+        <li><button class="nav-btn" onclick="switchSection('orders')">📋 Orders</button></li>
+        <li><button class="nav-btn" onclick="switchSection('promo')">🎟️ Promo Codes</button></li>
+        <li><button class="nav-btn" onclick="switchSection('referrals')">👥 Referrals</button></li>
+        <li><button class="nav-btn" onclick="logout()">🚪 Logout</button></li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>Admin Dashboard</h1>
+        <div class="admin-info">
+          <p id="adminName">Admin</p>
+        </div>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboard" class="section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Users</h3>
+            <div class="value" id="totalUsers">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Total Orders</h3>
+            <div class="value" id="totalOrders">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Total Revenue</h3>
+            <div class="value" id="totalRevenue">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Active Games</h3>
+            <div class="value" id="activeGames">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Section -->
+      <div id="users" class="section">
+        <div class="table-container">
+          <div class="table-header">
+            <h3>User Management</h3>
+            <input type="text" placeholder="Search users..." id="userSearch" onkeyup="searchUsers()">
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>RM Coins</th>
+                <th>Stars</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable">
+              <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gifts Section -->
+      <div id="gifts" class="section">
+        <div class="form-container">
+          <h3>Create Gift</h3>
+          <div class="form-group">
+            <label>Gift Name</label>
+            <input type="text" id="giftName" placeholder="Enter gift name">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Price (RM Coins)</label>
+              <input type="number" id="giftPrice" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" id="giftCategory" placeholder="General">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="createGift()">Create Gift</button>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <h3>Gifts</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="giftsTable">
+              <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cases Section -->
+      <div id="cases" class="section">
+        <div class="form-container">
+          <h3>Create Case</h3>
+          <div class="form-group">
+            <label>Case Name</label>
+            <input type="text" id="caseName" placeholder="Enter case name">
+          </div>
+          <div class="form-group">
+            <label>Price (RM Coins)</label>
+            <input type="number" id="casePrice" placeholder="0" min="0">
+          </div>
+          <button class="btn btn-primary" onclick="createCase()">Create Case</button>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <h3>Cases</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Rewards</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="casesTable">
+              <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders Section -->
+      <div id="orders" class="section">
+        <div class="table-container">
+          <div class="table-header">
+            <h3>Orders</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>User</th>
+                <th>Gift</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable">
+              <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Promo Codes Section -->
+      <div id="promo" class="section">
+        <div class="form-container">
+          <h3>Create Promo Code</h3>
+          <div class="form-group">
+            <label>Code</label>
+            <input type="text" id="promoCode" placeholder="SUMMER2024">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Discount Type</label>
+              <select id="promoType">
+                <option value="percent">Percentage</option>
+                <option value="fixed">Fixed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Discount Value</label>
+              <input type="number" id="promoValue" placeholder="0" min="0">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="createPromo()">Create Code</button>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <h3>Promo Codes</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Used</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="promoTable">
+              <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Referrals Section -->
+      <div id="referrals" class="section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Referrals</h3>
+            <div class="value" id="totalReferrals">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Rewarded</h3>
+            <div class="value" id="rewardedReferrals">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Total Bonus</h3>
+            <div class="value" id="totalBonus">0</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <h3>Top Referrers</h3>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Referrals</th>
+              </tr>
+            </thead>
+            <tbody id="referrersTable">
+              <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" style="display: none;"></div>
+
+  <script>
+    const API_URL = '/api';
+    let token = null;
+
+    // Get token from URL
+    function getTokenFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('token');
+    }
+
+    // Initialize
+    async function init() {
+      token = getTokenFromUrl();
+      if (!token) {
+        showToast('❌ No authentication token provided');
+        return;
+      }
+
+      await loadDashboard();
+      await loadUsers();
+      await loadGifts();
+      await loadCases();
+      await loadOrders();
+      await loadPromos();
+      await loadReferrals();
+    }
+
+    // Load dashboard
+    async function loadDashboard() {
+      try {
+        const response = await fetch(`${API_URL}/users/admin/all`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await response.json();
+        document.getElementById('totalUsers').textContent = users.length;
+
+        const ordersResponse = await fetch(`${API_URL}/orders/admin/all`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const orders = await ordersResponse.json();
+        document.getElementById('totalOrders').textContent = orders.length;
+
+        const totalRevenue = orders.reduce((sum, o) => sum + o.amount_rm_coins, 0);
+        document.getElementById('totalRevenue').textContent = totalRevenue;
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      }
+    }
+
+    // Load users
+    async function loadUsers() {
+      try {
+        const response = await fetch(`${API_URL}/users/admin/all`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await response.json();
+
+        const table = document.getElementById('usersTable');
+        table.innerHTML = users.map(u => `
+          <tr>
+            <td>${u.id}</td>
+            <td>@${u.username || u.first_name || 'N/A'}</td>
+            <td>${Math.floor(u.rm_coins)}</td>
+            <td>${Math.floor(u.stars)}</td>
+            <td>
+              <button class="btn btn-small btn-secondary" onclick="editUserBalance(${u.telegram_id})">Edit</button>
+              <button class="btn btn-small btn-danger" onclick="banUser(${u.id})">Ban</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    // Search users
+    function searchUsers() {
+      const query = document.getElementById('userSearch').value;
+      // TODO: Implement search
+    }
+
+    // Load gifts
+    async function loadGifts() {
+      try {
+        const response = await fetch(`${API_URL}/gifts`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const gifts = await response.json();
+
+        const table = document.getElementById('giftsTable');
+        table.innerHTML = gifts.map(g => `
+          <tr>
+            <td>${g.name}</td>
+            <td>${g.price_rm_coins}</td>
+            <td>${g.category}</td>
+            <td>${g.stock === -1 ? '∞' : g.stock}</td>
+            <td>
+              <button class="btn btn-small btn-secondary" onclick="editGift(${g.id})">Edit</button>
+              <button class="btn btn-small btn-danger" onclick="deleteGift(${g.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading gifts:', error);
+      }
+    }
+
+    // Create gift
+    async function createGift() {
+      const name = document.getElementById('giftName').value;
+      const price = parseFloat(document.getElementById('giftPrice').value);
+      const category = document.getElementById('giftCategory').value;
+
+      if (!name || !price) {
+        showToast('❌ Please fill all fields');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/gifts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, priceRmCoins: price, category })
+        });
+
+        if (response.ok) {
+          showToast('✅ Gift created successfully');
+          document.getElementById('giftName').value = '';
+          document.getElementById('giftPrice').value = '';
+          document.getElementById('giftCategory').value = '';
+          await loadGifts();
+        } else {
+          showToast('❌ Failed to create gift');
+        }
+      } catch (error) {
+        console.error('Error creating gift:', error);
+        showToast('❌ Error creating gift');
+      }
+    }
+
+    // Load cases
+    async function loadCases() {
+      try {
+        const response = await fetch(`${API_URL}/cases`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const cases = await response.json();
+
+        const table = document.getElementById('casesTable');
+        table.innerHTML = cases.map(c => `
+          <tr>
+            <td>${c.name}</td>
+            <td>${c.price_rm_coins}</td>
+            <td>-</td>
+            <td>
+              <button class="btn btn-small btn-secondary" onclick="editCase(${c.id})">Edit</button>
+              <button class="btn btn-small btn-danger" onclick="deleteCase(${c.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading cases:', error);
+      }
+    }
+
+    // Create case
+    async function createCase() {
+      const name = document.getElementById('caseName').value;
+      const price = parseFloat(document.getElementById('casePrice').value);
+
+      if (!name || !price) {
+        showToast('❌ Please fill all fields');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/cases`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, priceRmCoins: price })
+        });
+
+        if (response.ok) {
+          showToast('✅ Case created successfully');
+          document.getElementById('caseName').value = '';
+          document.getElementById('casePrice').value = '';
+          await loadCases();
+        } else {
+          showToast('❌ Failed to create case');
+        }
+      } catch (error) {
+        console.error('Error creating case:', error);
+        showToast('❌ Error creating case');
+      }
+    }
+
+    // Load orders
+    async function loadOrders() {
+      try {
+        const response = await fetch(`${API_URL}/orders/admin/all`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const orders = await response.json();
+
+        const table = document.getElementById('ordersTable');
+        table.innerHTML = orders.map(o => `
+          <tr>
+            <td>#${o.id}</td>
+            <td>${o.user_id}</td>
+            <td>${o.gift_id}</td>
+            <td>${o.amount_rm_coins}</td>
+            <td><span class="badge badge-success">${o.status}</span></td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading orders:', error);
+      }
+    }
+
+    // Load promos
+    async function loadPromos() {
+      try {
+        const response = await fetch(`${API_URL}/promo/all`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const promos = await response.json();
+
+        const table = document.getElementById('promoTable');
+        table.innerHTML = promos.map(p => `
+          <tr>
+            <td>${p.code}</td>
+            <td>${p.discount_value}${p.discount_type === 'percent' ? '%' : ' RM'}</td>
+            <td>${p.used_count}/${p.max_uses}</td>
+            <td><span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+              <button class="btn btn-small btn-danger" onclick="deletePromo(${p.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading promos:', error);
+      }
+    }
+
+    // Create promo
+    async function createPromo() {
+      const code = document.getElementById('promoCode').value;
+      const discountType = document.getElementById('promoType').value;
+      const discountValue = parseFloat(document.getElementById('promoValue').value);
+
+      if (!code || !discountValue) {
+        showToast('❌ Please fill all fields');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/promo`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ code, discountType, discountValue, maxUses: 100 })
+        });
+
+        if (response.ok) {
+          showToast('✅ Promo code created successfully');
+          document.getElementById('promoCode').value = '';
+          document.getElementById('promoValue').value = '';
+          await loadPromos();
+        } else {
+          showToast('❌ Failed to create promo code');
+        }
+      } catch (error) {
+        console.error('Error creating promo:', error);
+        showToast('❌ Error creating promo code');
+      }
+    }
+
+    // Load referrals
+    async function loadReferrals() {
+      try {
+        const response = await fetch(`${API_URL}/referrals/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        document.getElementById('totalReferrals').textContent = data.total_referrals || 0;
+        document.getElementById('rewardedReferrals').textContent = data.rewarded || 0;
+        document.getElementById('totalBonus').textContent = Math.floor(data.total_bonus_stars || 0);
+
+        const table = document.getElementById('referrersTable');
+        table.innerHTML = (data.top_inviters || []).map(u => `
+          <tr>
+            <td>@${u.username || u.first_name || 'N/A'}</td>
+            <td>${u.count}</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading referrals:', error);
+      }
+    }
+
+    // Switch section
+    function switchSection(sectionName) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(sectionName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Show toast
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+
+    // Initialize on load
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>

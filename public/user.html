@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GiftBot - User MiniApp</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #667eea;
+    }
+
+    .balance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .balance-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .balance-item .label {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .balance-item .value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .nav-tab {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Wallet Section */
+    .wallet-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .wallet-card h3 {
+      margin-bottom: 12px;
+      color: #667eea;
+    }
+
+    .deposit-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    /* Gift Shop */
+    .gifts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .gift-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .gift-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .gift-image {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .gift-info {
+      padding: 12px;
+    }
+
+    .gift-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .gift-price {
+      color: #667eea;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Games Section */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .game-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .game-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .game-desc {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* Referral Section */
+    .referral-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .referral-code {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-weight: bold;
+      margin: 12px 0;
+      word-break: break-all;
+    }
+
+    .referral-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #667eea;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .input-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease;
+      z-index: 2000;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .spinner {
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-item {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 12px;
+      font-weight: 500;
+      color: #999;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item.active {
+      color: #667eea;
+    }
+
+    .nav-item-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>💎 GiftBot</h1>
+      <div class="balance-grid">
+        <div class="balance-item">
+          <div class="label">RM Coins</div>
+          <div class="value" id="rmCoinsDisplay">0</div>
+        </div>
+        <div class="balance-item">
+          <div class="label">⭐ Stars</div>
+          <div class="value" id="starsDisplay">0</div>
+        </div>
+        <div class="balance-item">
+          <div class="label">UZS</div>
+          <div class="value" id="uzsDisplay">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('wallet')">💰 Wallet</button>
+      <button class="nav-tab" onclick="switchTab('gifts')">🎁 Gifts</button>
+      <button class="nav-tab" onclick="switchTab('games')">🎮 Games</button>
+      <button class="nav-tab" onclick="switchTab('referral')">👥 Referral</button>
+      <button class="nav-tab" onclick="switchTab('profile')">👤 Profile</button>
+    </div>
+
+    <!-- Wallet Section -->
+    <div id="wallet" class="section active">
+      <div class="wallet-card">
+        <h3>💳 Deposit</h3>
+        <div class="deposit-buttons">
+          <button class="btn btn-primary" onclick="depositStars()">⭐ Deposit Stars</button>
+          <button class="btn btn-primary" onclick="depositUzs()">💵 Deposit UZS</button>
+        </div>
+      </div>
+
+      <div class="wallet-card">
+        <h3>🎟️ Promo Code</h3>
+        <div class="input-group">
+          <input type="text" id="promoCode" placeholder="Enter promo code">
+          <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="applyPromoCode()">Apply</button>
+        </div>
+      </div>
+
+      <div class="wallet-card">
+        <h3>👑 Telegram Premium</h3>
+        <button class="btn btn-primary" style="width: 100%;" onclick="buyPremium()">Upgrade to Premium</button>
+      </div>
+    </div>
+
+    <!-- Gifts Section -->
+    <div id="gifts" class="section">
+      <div class="wallet-card">
+        <h3>🎁 Gift Shop</h3>
+        <div class="gifts-grid" id="giftsGrid">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Games Section -->
+    <div id="games" class="section">
+      <div class="games-grid">
+        <div class="game-card" onclick="startGame('mines')">
+          <div class="game-icon">⛏️</div>
+          <div class="game-name">Mines</div>
+          <div class="game-desc">Avoid bombs, win multipliers</div>
+        </div>
+        <div class="game-card" onclick="startGame('cases')">
+          <div class="game-icon">📦</div>
+          <div class="game-name">Cases</div>
+          <div class="game-desc">Open loot boxes</div>
+        </div>
+        <div class="game-card" onclick="startGame('slots')">
+          <div class="game-icon">🎰</div>
+          <div class="game-name">Slots</div>
+          <div class="game-desc">Classic slot machine</div>
+        </div>
+        <div class="game-card" onclick="startGame('coinflip')">
+          <div class="game-icon">🪙</div>
+          <div class="game-name">Coin Flip</div>
+          <div class="game-desc">50/50 chance to win</div>
+        </div>
+        <div class="game-card" onclick="startGame('dice')">
+          <div class="game-icon">🎲</div>
+          <div class="game-name">Dice</div>
+          <div class="game-desc">Roll and win</div>
+        </div>
+        <div class="game-card" onclick="showGameHistory()">
+          <div class="game-icon">📊</div>
+          <div class="game-name">History</div>
+          <div class="game-desc">View past games</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Section -->
+    <div id="referral" class="section">
+      <div class="referral-card">
+        <h3>👥 Invite Friends</h3>
+        <p>Earn 1% of every gift purchase made by your referred users!</p>
+        <div class="referral-code" id="referralCode">Loading...</div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="copyReferralCode()">📋 Copy Link</button>
+      </div>
+
+      <div class="referral-card">
+        <h3>📊 Your Stats</h3>
+        <div class="referral-stats">
+          <div class="stat">
+            <div class="stat-value" id="referralCount">0</div>
+            <div class="stat-label">Referrals</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="referralEarnings">0</div>
+            <div class="stat-label">Earnings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div id="profile" class="section">
+      <div class="wallet-card">
+        <h3>👤 Profile</h3>
+        <div style="margin-top: 16px;">
+          <p><strong>Username:</strong> <span id="profileUsername">-</span></p>
+          <p><strong>Name:</strong> <span id="profileName">-</span></p>
+          <p><strong>Joined:</strong> <span id="profileJoined">-</span></p>
+          <p><strong>Total Purchases:</strong> <span id="profilePurchases">0</span></p>
+        </div>
+      </div>
+
+      <div class="wallet-card">
+        <h3>⚙️ Settings</h3>
+        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="logout()">🚪 Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="giftModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('giftModal')">✕</button>
+      <div class="modal-header">🎁 Send Gift</div>
+      <div class="input-group">
+        <label>Recipient Telegram ID</label>
+        <input type="number" id="recipientId" placeholder="123456789">
+      </div>
+      <div class="input-group">
+        <label>Message (Optional)</label>
+        <textarea id="giftMessage" placeholder="Add a personal message..."></textarea>
+      </div>
+      <div class="input-group">
+        <label>
+          <input type="checkbox" id="anonymousGift"> Send anonymously
+        </label>
+      </div>
+      <button class="btn btn-primary" style="width: 100%;" onclick="sendGift()">Send Gift</button>
+    </div>
+  </div>
+
+  <div id="gameModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('gameModal')">✕</button>
+      <div class="modal-header" id="gameModalTitle">Play Game</div>
+      <div id="gameContent"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" style="display: none;"></div>
+
+  <script>
+    const API_URL = '/api';
+    let currentUser = null;
+    let token = null;
+
+    // Get token from URL
+    function getTokenFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('token');
+    }
+
+    // Initialize
+    async function init() {
+      token = getTokenFromUrl();
+      if (!token) {
+        showToast('❌ No authentication token provided');
+        return;
+      }
+
+      await loadUserData();
+      await loadGifts();
+      await loadReferralData();
+    }
+
+    // Load user data
+    async function loadUserData() {
+      try {
+        const response = await fetch(`${API_URL}/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        currentUser = await response.json();
+        updateBalanceDisplay();
+        updateProfileDisplay();
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showToast('❌ Failed to load user data');
+      }
+    }
+
+    // Update balance display
+    function updateBalanceDisplay() {
+      if (currentUser) {
+        document.getElementById('rmCoinsDisplay').textContent = Math.floor(currentUser.rm_coins);
+        document.getElementById('starsDisplay').textContent = Math.floor(currentUser.stars);
+        document.getElementById('uzsDisplay').textContent = Math.floor(currentUser.uzs);
+      }
+    }
+
+    // Update profile display
+    function updateProfileDisplay() {
+      if (currentUser) {
+        document.getElementById('profileUsername').textContent = currentUser.username || '-';
+        document.getElementById('profileName').textContent = currentUser.first_name || '-';
+        document.getElementById('profileJoined').textContent = new Date(currentUser.created_at).toLocaleDateString();
+      }
+    }
+
+    // Load gifts
+    async function loadGifts() {
+      try {
+        const response = await fetch(`${API_URL}/gifts`);
+        const gifts = await response.json();
+        
+        const giftsGrid = document.getElementById('giftsGrid');
+        giftsGrid.innerHTML = gifts.map(gift => `
+          <div class="gift-card" onclick="selectGift(${gift.id})">
+            <div class="gift-image">🎁</div>
+            <div class="gift-info">
+              <div class="gift-name">${gift.name}</div>
+              <div class="gift-price">💰 ${gift.price_rm_coins}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading gifts:', error);
+      }
+    }
+
+    // Load referral data
+    async function loadReferralData() {
+      if (currentUser) {
+        document.getElementById('referralCode').textContent = `https://t.me/bot?start=ref_${currentUser.referral_code}`;
+      }
+    }
+
+    // Switch tab
+    function switchTab(tabName) {
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+      // Show selected section
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Select gift
+    function selectGift(giftId) {
+      document.getElementById('giftModal').classList.add('active');
+    }
+
+    // Send gift
+    async function sendGift() {
+      const recipientId = parseInt(document.getElementById('recipientId').value);
+      const message = document.getElementById('giftMessage').value;
+      const anonymous = document.getElementById('anonymousGift').checked;
+
+      if (!recipientId) {
+        showToast('❌ Please enter recipient ID');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/orders`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            giftId: 1, // TODO: Get selected gift ID
+            targetTelegramId: recipientId,
+            anonymous,
+            message
+          })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showToast('✅ Gift sent successfully!');
+          closeModal('giftModal');
+          await loadUserData();
+        } else {
+          showToast(`❌ ${result.error}`);
+        }
+      } catch (error) {
+        console.error('Error sending gift:', error);
+        showToast('❌ Failed to send gift');
+      }
+    }
+
+    // Deposit functions
+    function depositStars() {
+      showToast('⭐ Deposit Stars feature coming soon');
+    }
+
+    function depositUzs() {
+      showToast('💵 Deposit UZS feature coming soon');
+    }
+
+    // Apply promo code
+    async function applyPromoCode() {
+      const code = document.getElementById('promoCode').value;
+      if (!code) {
+        showToast('❌ Please enter a promo code');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/promo/validate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showToast(`✅ Promo applied! Discount: ${result.discount_value}${result.discount_type === 'percent' ? '%' : ' RM'}`);
+          document.getElementById('promoCode').value = '';
+        } else {
+          showToast(`❌ ${result.error}`);
+        }
+      } catch (error) {
+        console.error('Error applying promo:', error);
+        showToast('❌ Failed to apply promo code');
+      }
+    }
+
+    // Buy premium
+    function buyPremium() {
+      showToast('👑 Premium purchase coming soon');
+    }
+
+    // Start game
+    function startGame(gameType) {
+      document.getElementById('gameModal').classList.add('active');
+      document.getElementById('gameModalTitle').textContent = `🎮 ${gameType.toUpperCase()}`;
+      
+      if (gameType === 'mines') {
+        document.getElementById('gameContent').innerHTML = `
+          <div class="input-group">
+            <label>Bet Amount (RM Coins)</label>
+            <input type="number" id="gameBet" placeholder="Enter bet amount" min="1">
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="playMines()">Start Game</button>
+        `;
+      } else if (gameType === 'slots') {
+        document.getElementById('gameContent').innerHTML = `
+          <div class="input-group">
+            <label>Bet Amount (RM Coins)</label>
+            <input type="number" id="gameBet" placeholder="Enter bet amount" min="1">
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="playSlots()">Spin</button>
+        `;
+      }
+    }
+
+    // Play slots
+    async function playSlots() {
+      const betAmount = parseFloat(document.getElementById('gameBet').value);
+      if (!betAmount || betAmount <= 0) {
+        showToast('❌ Invalid bet amount');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/games/slots/play`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ betAmount })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showToast(`🎰 Result: ${result.reels.join(' ')} - Win: ${result.winAmount} RM Coins`);
+          await loadUserData();
+          closeModal('gameModal');
+        } else {
+          showToast(`❌ ${result.error}`);
+        }
+      } catch (error) {
+        console.error('Error playing slots:', error);
+        showToast('❌ Failed to play game');
+      }
+    }
+
+    // Show game history
+    function showGameHistory() {
+      showToast('📊 Game history coming soon');
+    }
+
+    // Copy referral code
+    function copyReferralCode() {
+      const code = document.getElementById('referralCode').textContent;
+      navigator.clipboard.writeText(code);
+      showToast('📋 Referral link copied!');
+    }
+
+    // Close modal
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    // Show toast
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+
+    // Initialize on load
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
