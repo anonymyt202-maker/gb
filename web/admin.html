@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Admin Panel</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0a0d14;--bg2:#111827;--bg3:#1a2235;--bg4:#1f2d45;
+  --accent:#6366f1;--accent2:#818cf8;--gold:#f59e0b;--gold2:#fbbf24;
+  --green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--border:#1e293b;--radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;padding-bottom:72px}
+.navbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100}
+.navbar::-webkit-scrollbar{display:none}
+.nav-item{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;padding:10px 6px 8px;gap:3px;cursor:pointer;border:none;background:none;color:var(--text2);font-size:10px;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-item.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.nav-item .icon{font-size:18px}
+.header{padding:14px 16px;font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--bg2),var(--bg3))}
+.page{display:none;padding:12px}
+.page.active{display:block}
+
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px}
+.stat-label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.stat-val{font-size:22px;font-weight:800}
+.stat-val.green{color:var(--green)}.stat-val.gold{color:var(--gold2)}.stat-val.red{color:var(--red)}.stat-val.blue{color:var(--blue)}
+
+.section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;margin:16px 0 8px;letter-spacing:.5px}
+.btn{background:var(--accent);border:none;border-radius:10px;padding:10px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.btn.secondary{background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.btn.danger{background:var(--red)}
+.btn.green{background:var(--green)}
+.btn.sm{padding:6px 10px;font-size:11px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card-title{font-weight:700;font-size:14px}
+.card-sub{font-size:12px;color:var(--text2)}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.green{background:rgba(16,185,129,.15);color:var(--green)}
+.badge.red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge.gold{background:rgba(245,158,11,.15);color:var(--gold)}
+.badge.gray{background:rgba(100,116,139,.15);color:var(--text2)}
+
+.form-group{margin-bottom:10px}
+.form-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:6px}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-row{display:flex;gap:8px}
+.form-row > *{flex:1}
+.toggle{width:40px;height:22px;background:var(--border);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;display:inline-block}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s}
+.toggle.on::after{left:20px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:20px;width:100%;max-width:420px;margin-top:20px;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:14px}
+.modal-close-x{float:right;background:var(--bg3);border:none;width:28px;height:28px;border-radius:8px;color:var(--text);cursor:pointer;font-size:16px}
+
+.prize-row{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px}
+.prize-row .form-row{margin-bottom:6px}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,40,60,.95);backdrop-filter:blur(10px);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.loading{display:flex;align-items:center;justify-content:center;padding:30px;color:var(--text2)}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.search-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px}
+.thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--bg4)}
+.no-access{text-align:center;padding:60px 20px}
+</style>
+</head>
+<body>
+
+<div id="noAccess" class="no-access" style="display:none">
+  <div style="font-size:60px;margin-bottom:16px">🔒</div>
+  <h2>Ruxsat yo'q</h2>
+  <p style="color:var(--text2);margin-top:8px">Bu panel faqat adminlar uchun</p>
+</div>
+
+<div id="adminApp" style="display:none">
+<nav class="navbar">
+  <button class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard',this)"><span class="icon">📊</span>Dashboard</button>
+  <button class="nav-item" data-page="gifts" onclick="switchPage('gifts',this)"><span class="icon">🎁</span>Giftlar</button>
+  <button class="nav-item" data-page="cases" onclick="switchPage('cases',this)"><span class="icon">📦</span>Cases</button>
+  <button class="nav-item" data-page="users" onclick="switchPage('users',this)"><span class="icon">👥</span>Userlar</button>
+  <button class="nav-item" data-page="orders" onclick="switchPage('orders',this)"><span class="icon">🛍</span>Orders</button>
+  <button class="nav-item" data-page="payments" onclick="switchPage('payments',this)"><span class="icon">💳</span>To'lovlar</button>
+  <button class="nav-item" data-page="promo" onclick="switchPage('promo',this)"><span class="icon">🎟</span>Promo</button>
+  <button class="nav-item" data-page="accounts" onclick="switchPage('accounts',this)"><span class="icon">📱</span>Accountlar</button>
+  <button class="nav-item" data-page="channels" onclick="switchPage('channels',this)"><span class="icon">📣</span>Kanallar</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="header">📊 Dashboard</div>
+  <div id="dashContent"><div class="loading"><div class="spinner"></div>Yuklanmoqda...</div></div>
+</div>
+
+<!-- GIFTS -->
+<div id="page-gifts" class="page">
+  <div class="header">🎁 Giftlar</div>
+  <div style="padding:12px">
+    <div class="btn-row"><button class="btn" onclick="openGiftModal()">➕ Yangi Gift</button></div>
+    <input class="search-input" placeholder="Qidirish..." oninput="renderGiftsList()" id="giftSearch">
+    <div id="giftsList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- CASES -->
+<div id="page-cases" class="page">
+  <div class="header">📦 Cases</div>
+  <div style="padding:12px">
+    <div class="btn-row"><button class="btn" onclick="openCaseModal()">➕ Yangi Case</button></div>
+    <div id="casesList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- USERS -->
+<div id="page-users" class="page">
+  <div class="header">👥 Foydalanuvchilar</div>
+  <div style="padding:12px">
+    <input class="search-input" placeholder="ID, username yoki ism..." oninput="searchUsers(this.value)">
+    <div id="usersList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- ORDERS -->
+<div id="page-orders" class="page">
+  <div class="header">🛍 Buyurtmalar</div>
+  <div style="padding:12px">
+    <div class="btn-row">
+      <button class="btn secondary sm" onclick="loadOrders(null)">Barchasi</button>
+      <button class="btn secondary sm" onclick="loadOrders('success')">✅ Success</button>
+      <button class="btn secondary sm" onclick="loadOrders('pending')">⏳ Pending</button>
+      <button class="btn secondary sm" onclick="loadOrders('failed')">❌ Failed</button>
+    </div>
+    <div id="ordersList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- PAYMENTS -->
+<div id="page-payments" class="page">
+  <div class="header">💳 To'lov So'rovlari</div>
+  <div style="padding:12px">
+    <div class="btn-row">
+      <button class="btn secondary sm" onclick="loadPayments(null)">Barchasi</button>
+      <button class="btn secondary sm" onclick="loadPayments('pending')">⏳ Pending</button>
+      <button class="btn secondary sm" onclick="loadPayments('approved')">✅ Approved</button>
+    </div>
+    <div id="paymentsList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- PROMO -->
+<div id="page-promo" class="page">
+  <div class="header">🎟 Promo Kodlar</div>
+  <div style="padding:12px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">➕ Yangi Promo</div>
+      <div class="form-group"><div class="form-label">Kod</div><input class="form-input" id="promoCode" placeholder="WELCOME10"></div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Tur</div>
+          <select class="form-select" id="promoType"><option value="percent">Foiz (%)</option><option value="fixed">Fiks (RM)</option></select>
+        </div>
+        <div class="form-group"><div class="form-label">Qiymat</div><input class="form-input" type="number" id="promoValue" placeholder="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Max ishlatish</div><input class="form-input" type="number" id="promoMax" value="100"></div>
+        <div class="form-group"><div class="form-label">Tugash sana (ixtiyoriy)</div><input class="form-input" type="date" id="promoExpire"></div>
+      </div>
+      <button class="btn" onclick="createPromo()">✅ Yaratish</button>
+    </div>
+    <div id="promoList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div id="page-accounts" class="page">
+  <div class="header">📱 Telegram Accountlar</div>
+  <div style="padding:12px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">➕ Account Ulash</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Account ulash uchun telefon raqamini kiriting va kodni tasdiqlang.</p>
+      <div class="form-group"><div class="form-label">Telefon</div><input class="form-input" id="accPhone" placeholder="+998901234567"></div>
+      <div id="otpSection" style="display:none">
+        <div class="form-group"><div class="form-label">Tasdiqlash kodi</div><input class="form-input" id="accOtp" placeholder="12345"></div>
+        <button class="btn green" onclick="confirmAccount()">✅ Tasdiqlash</button>
+      </div>
+      <button class="btn" id="sendOtpBtn" onclick="sendOtp()">📲 Kod yuborish</button>
+    </div>
+    <div id="accountsList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- CHANNELS -->
+<div id="page-channels" class="page">
+  <div class="header">📣 Majburiy Kanallar</div>
+  <div style="padding:12px">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">➕ Kanal Qo'shish</div>
+      <div class="form-group"><div class="form-label">Kanal ID/Username</div><input class="form-input" id="chanId" placeholder="@mychannel"></div>
+      <div class="form-group"><div class="form-label">Nomi</div><input class="form-input" id="chanName" placeholder="Asosiy kanal"></div>
+      <button class="btn" onclick="addChannel()">✅ Qo'shish</button>
+    </div>
+    <div id="channelsList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+</div><!-- /adminApp -->
+
+<!-- ═══ GIFT MODAL ═══ -->
+<div class="modal-overlay" id="giftModal">
+  <div class="modal-box">
+    <button class="modal-close-x" onclick="closeModal('giftModal')">✕</button>
+    <div class="modal-title" id="giftModalTitle">➕ Yangi Gift</div>
+    <input type="hidden" id="giftId">
+    <div class="form-group"><div class="form-label">Nomi *</div><input class="form-input" id="giftName" placeholder="Ayiq 🧸"></div>
+    <div class="form-group"><div class="form-label">Tavsif</div><textarea class="form-textarea" id="giftDesc" rows="2"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Narx (RM Coin) *</div><input class="form-input" type="number" id="giftPrice" placeholder="15"></div>
+      <div class="form-group">
+  <div class="form-label">Telegram Gift ID / Emoji *</div>
+  <div style="display:flex;gap:4px">
+    <input class="form-input" id="giftTgId" placeholder="5168043015958052 yoki 🧸">
+    <select class="form-select" style="width:auto" onchange="if(this.value)document.getElementById('giftTgId').value=this.value">
+      <option value="">Emoji</option>
+      <option value="🧸">🧸</option><option value="💝">💝</option><option value="🎁">🎁</option>
+      <option value="🌹">🌹</option><option value="🎂">🎂</option><option value="🚀">🚀</option>
+      <option value="💐">💐</option><option value="🍾">🍾</option><option value="🏆">🏆</option>
+      <option value="💎">💎</option>
+    </select>
+  </div>
+</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Kategoriya</div><input class="form-input" id="giftCategory" placeholder="Umumiy"></div>
+      <div class="form-group"><div class="form-label">Stock (-1 = cheksiz)</div><input class="form-input" type="number" id="giftStock" value="-1"></div>
+    </div>
+    <div class="form-group"><div class="form-label">Rasm URL</div><input class="form-input" id="giftImageUrl" placeholder="https://..."></div>
+    <div class="form-group"><div class="form-label">Yoki rasm yuklash</div><input class="form-input" type="file" id="giftFile" accept="image/*"></div>
+    <div class="form-group" id="giftActiveRow" style="display:none">
+      <div class="form-label">Faol</div>
+      <div class="toggle on" id="giftActiveToggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <button class="btn" style="width:100%" onclick="saveGift()">💾 Saqlash</button>
+  </div>
+</div>
+
+<!-- ═══ CASE MODAL ═══ -->
+<div class="modal-overlay" id="caseModal">
+  <div class="modal-box">
+    <button class="modal-close-x" onclick="closeModal('caseModal')">✕</button>
+    <div class="modal-title">➕ Yangi Case</div>
+    <div class="form-group"><div class="form-label">Nomi *</div><input class="form-input" id="caseName" placeholder="Premium Case"></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Narx (RM Coin) *</div><input class="form-input" type="number" id="casePrice" placeholder="50"></div>
+      <div class="form-group"><div class="form-label">Limited?</div>
+        <div class="toggle" id="caseLimitedToggle" onclick="this.classList.toggle('on'); document.getElementById('caseSupplyRow').style.display=this.classList.contains('on')?'block':'none'"></div>
+      </div>
+    </div>
+    <div class="form-group" id="caseSupplyRow" style="display:none">
+      <div class="form-label">Umumiy soni</div><input class="form-input" type="number" id="caseSupply" placeholder="100">
+    </div>
+    <div class="form-group"><div class="form-label">Rasm URL</div><input class="form-input" id="caseImageUrl" placeholder="https://..."></div>
+    <div class="form-group"><div class="form-label">Yoki rasm yuklash</div><input class="form-input" type="file" id="caseFile" accept="image/*"></div>
+
+    <div class="section-title">🎁 Yutuqlar (chance yig'indisi = 100%)</div>
+    <div id="prizesContainer"></div>
+    <button class="btn secondary sm" onclick="addPrizeRow()">➕ Yutuq qo'shish</button>
+    <div id="chanceTotal" style="font-size:12px;margin:8px 0;color:var(--text2)">Jami chance: 0%</div>
+    <button class="btn" style="width:100%" onclick="saveCase()">💾 Case Yaratish</button>
+  </div>
+</div>
+
+<!-- ═══ USER BALANCE MODAL ═══ -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <button class="modal-close-x" onclick="closeModal('userModal')">✕</button>
+    <div class="modal-title">💰 Balans O'zgartirish</div>
+    <input type="hidden" id="userTgId">
+    <div class="card-sub" id="userModalInfo" style="margin-bottom:12px"></div>
+    <div class="form-group"><div class="form-label">RM Coin (+ qo'shish / - ayirish)</div><input class="form-input" type="number" id="userRmDelta" placeholder="10 yoki -10"></div>
+    <div class="form-group"><div class="form-label">Stars (+ qo'shish / - ayirish)</div><input class="form-input" type="number" id="userStarsDelta" placeholder="0"></div>
+    <div class="form-group"><div class="form-label">UZS (+ qo'shish / - ayirish)</div><input class="form-input" type="number" id="userUzsDelta" placeholder="0"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="saveUserBalance()">💾 Saqlash</button>
+      <button class="btn danger" id="banBtn" onclick="toggleBan()">🚫 Ban/Unban</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); tg.setHeaderColor?.('#0a0d14'); tg.setBackgroundColor?.('#0a0d14'); }
+
+const API = '';
+const initData = tg?.initData || '';
+const headers = { 'Content-Type': 'application/json', 'X-Init-Data': initData };
+const fdHeaders = { 'X-Init-Data': initData };
+
+let allGifts = [], allCases = [], rarityColors = { common:'#6b7280', rare:'#3b82f6', epic:'#a855f7', legendary:'#f59e0b' };
+
+// ─── Init ─────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const r = await fetch(API + '/api/admin/dashboard', { headers });
+    if (r.status === 403 || r.status === 401) {
+      document.getElementById('noAccess').style.display = 'block';
+      return;
+    }
+    document.getElementById('adminApp').style.display = 'block';
+    renderDashboard(await r.json());
+  } catch(e) {
+    document.getElementById('noAccess').style.display = 'block';
+  }
+}
+
+function switchPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  const loaders = { dashboard: loadDashboard, gifts: loadGifts, cases: loadCases, users: () => searchUsers(''),
+    orders: () => loadOrders(null), payments: () => loadPayments(null), promo: loadPromos,
+    accounts: loadAccounts, channels: loadChannels };
+  loaders[name]?.();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const r = await fetch(API + '/api/admin/dashboard', { headers });
+  renderDashboard(await r.json());
+}
+
+function renderDashboard(d) {
+  document.getElementById('dashContent').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">👥 Foydalanuvchilar</div><div class="stat-val">${d.total_users}</div></div>
+      <div class="stat-card"><div class="stat-label">🎁 Giftlar</div><div class="stat-val">${d.total_gifts}</div></div>
+      <div class="stat-card"><div class="stat-label">✅ Muvaffaqiyatli</div><div class="stat-val green">${d.success_orders}</div></div>
+      <div class="stat-card"><div class="stat-label">⏳ Kutilmoqda</div><div class="stat-val gold">${d.pending_orders}</div></div>
+      <div class="stat-card"><div class="stat-label">❌ Xato</div><div class="stat-val red">${d.failed_orders}</div></div>
+      <div class="stat-card"><div class="stat-label">🪙 Jami RM</div><div class="stat-val gold">${d.total_rm.toFixed(0)}</div></div>
+      <div class="stat-card"><div class="stat-label">💰 Daromad (RM)</div><div class="stat-val green">${d.revenue_rm.toFixed(0)}</div></div>
+      <div class="stat-card"><div class="stat-label">📱 Aktiv Accountlar</div><div class="stat-val blue">${d.active_accounts}</div></div>
+      <div class="stat-card"><div class="stat-label">📦 Cases</div><div class="stat-val">${d.total_cases}</div></div>
+      <div class="stat-card"><div class="stat-label">🎰 Case Ochilgan</div><div class="stat-val">${d.total_case_opens}</div></div>
+      <div class="stat-card"><div class="stat-label">💳 Kutilayotgan To'lov</div><div class="stat-val gold">${d.pending_payments}</div></div>
+      <div class="stat-card"><div class="stat-label">💱 Kurs</div><div class="stat-val" style="font-size:14px">1🪙=${d.rm_to_stars}⭐=${d.rm_to_uzs}so'm</div></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GIFTS
+// ═══════════════════════════════════════════════════════════════════
+async function loadGifts() {
+  const r = await fetch(API + '/api/gifts/admin/all', { headers });
+  allGifts = await r.json();
+  renderGiftsList();
+}
+
+function renderGiftsList() {
+  const q = (document.getElementById('giftSearch')?.value || '').toLowerCase();
+  const list = allGifts.filter(g => g.name.toLowerCase().includes(q));
+  const el = document.getElementById('giftsList');
+  if (!list.length) { el.innerHTML = '<div class="empty">Gift topilmadi</div>'; return; }
+  el.innerHTML = list.map(g => `
+    <div class="card">
+      <div class="card-head">
+        <div style="display:flex;gap:10px;align-items:center">
+          ${g.image_url || g.file_path ? `<img class="thumb" src="${g.image_url||g.file_path}">` : '<div class="thumb" style="display:flex;align-items:center;justify-content:center">🎁</div>'}
+          <div>
+            <div class="card-title">${g.name}</div>
+            <div class="card-sub">🪙 ${g.price_rm} RM • ${g.category} • Stock: ${g.stock===-1?'∞':g.stock}</div>
+          </div>
+        </div>
+        <span class="badge ${g.is_active?'green':'gray'}">${g.is_active?'Faol':'Off'}</span>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn secondary sm" onclick="editGift(${g.id})">✏️ Tahrirlash</button>
+        <button class="btn ${g.is_active?'secondary':'green'} sm" onclick="toggleGiftActive(${g.id},${g.is_active})">${g.is_active?'⏸ O\'chirish':'▶️ Yoqish'}</button>
+        <button class="btn danger sm" onclick="deleteGift(${g.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openGiftModal() {
+  document.getElementById('giftModalTitle').textContent = '➕ Yangi Gift';
+  document.getElementById('giftId').value = '';
+  ['giftName','giftDesc','giftPrice','giftTgId','giftCategory','giftImageUrl'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('giftStock').value = -1;
+  document.getElementById('giftActiveRow').style.display = 'none';
+  document.getElementById('giftModal').classList.add('show');
+}
+
+function editGift(id) {
+  const g = allGifts.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('giftModalTitle').textContent = '✏️ Gift Tahrirlash';
+  document.getElementById('giftId').value = g.id;
+  document.getElementById('giftName').value = g.name;
+  document.getElementById('giftDesc').value = g.description || '';
+  document.getElementById('giftPrice').value = g.price_rm;
+  document.getElementById('giftTgId').value = g.tg_gift_id;
+  document.getElementById('giftCategory').value = g.category;
+  document.getElementById('giftStock').value = g.stock;
+  document.getElementById('giftImageUrl').value = g.image_url || '';
+  document.getElementById('giftActiveRow').style.display = 'block';
+  document.getElementById('giftActiveToggle').classList.toggle('on', !!g.is_active);
+  document.getElementById('giftModal').classList.add('show');
+}
+
+async function saveGift() {
+  const id = document.getElementById('giftId').value;
+  const fd = new FormData();
+  fd.append('name', document.getElementById('giftName').value);
+  fd.append('description', document.getElementById('giftDesc').value);
+  fd.append('price_rm', document.getElementById('giftPrice').value);
+  fd.append('tg_gift_id', document.getElementById('giftTgId').value);
+  fd.append('category', document.getElementById('giftCategory').value || 'Umumiy');
+  fd.append('stock', document.getElementById('giftStock').value);
+  fd.append('image_url', document.getElementById('giftImageUrl').value);
+  if (id) fd.append('is_active', document.getElementById('giftActiveToggle').classList.contains('on') ? 'true' : 'false');
+  const file = document.getElementById('giftFile').files[0];
+  if (file) fd.append('file', file);
+
+  if (!document.getElementById('giftName').value || !document.getElementById('giftPrice').value || !document.getElementById('giftTgId').value) {
+    return showToast('❌ Majburiy maydonlarni to\'ldiring', 'error');
+  }
+
+  const url = id ? `/api/gifts/admin/${id}` : '/api/gifts/admin';
+  const method = id ? 'PUT' : 'POST';
+  const r = await fetch(API + url, { method, headers: fdHeaders, body: fd });
+  if (r.ok) {
+    showToast('✅ Saqlandi!', 'success');
+    closeModal('giftModal');
+    loadGifts();
+  } else {
+    const d = await r.json().catch(() => ({}));
+    showToast('❌ ' + (d.error || 'Xato'), 'error');
+  }
+}
+
+async function toggleGiftActive(id, current) {
+  const fd = new FormData();
+  fd.append('is_active', current ? 'false' : 'true');
+  await fetch(API + `/api/gifts/admin/${id}`, { method: 'PUT', headers: fdHeaders, body: fd });
+  loadGifts();
+}
+
+async function deleteGift(id) {
+  if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+  await fetch(API + `/api/gifts/admin/${id}`, { method: 'DELETE', headers });
+  loadGifts();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CASES
+// ═══════════════════════════════════════════════════════════════════
+async function loadCases() {
+  const r = await fetch(API + '/api/cases/admin/all', { headers });
+  allCases = await r.json();
+  const el = document.getElementById('casesList');
+  if (!allCases.length) { el.innerHTML = '<div class="empty">Case yo\'q</div>'; return; }
+  el.innerHTML = allCases.map(c => `
+    <div class="card">
+      <div class="card-head">
+        <div style="display:flex;gap:10px;align-items:center">
+          ${c.image_url ? `<img class="thumb" src="${c.image_url}">` : '<div class="thumb" style="display:flex;align-items:center;justify-content:center">📦</div>'}
+          <div>
+            <div class="card-title">${c.name}</div>
+            <div class="card-sub">🪙 ${c.price_rm} RM • Ochilgan: ${c.opened_count}${c.is_limited?` / ${c.total_supply}`:''}</div>
+          </div>
+        </div>
+        ${c.is_limited ? '<span class="badge gold">LIMITED</span>' : '<span class="badge green">∞</span>'}
+      </div>
+      <div style="margin-top:8px">
+        ${c.prizes.map(p => `<div class="card-sub">• ${p.name} (${p.type}, ${p.value}) — ${p.chance}%</div>`).join('')}
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn danger sm" onclick="deleteCase(${c.id})">🗑 O'chirish</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openCaseModal() {
+  document.getElementById('caseName').value = '';
+  document.getElementById('casePrice').value = '';
+  document.getElementById('caseImageUrl').value = '';
+  document.getElementById('caseSupply').value = '';
+  document.getElementById('caseLimitedToggle').classList.remove('on');
+  document.getElementById('caseSupplyRow').style.display = 'none';
+  document.getElementById('prizesContainer').innerHTML = '';
+  addPrizeRow(); addPrizeRow();
+  document.getElementById('caseModal').classList.add('show');
+}
+
+function addPrizeRow() {
+  const div = document.createElement('div');
+  div.className = 'prize-row';
+  div.innerHTML = `
+    <div class="form-row">
+      <input class="form-input" placeholder="Nomi (masalan: 100 Stars)" data-f="name">
+      <select class="form-select" data-f="type" onchange="updateChanceTotal()">
+        <option value="rm">RM Coin (avto)</option>
+        <option value="stars">Stars (avto)</option>
+        <option value="gift">Gift (qo'lda)</option>
+        <option value="nft">NFT (qo'lda)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <input class="form-input" placeholder="Qiymat (masalan: 100)" data-f="value">
+      <select class="form-select" data-f="rarity">
+        <option value="common">Common</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+      </select>
+      <input class="form-input" type="number" placeholder="Chance %" data-f="chance" oninput="updateChanceTotal()" style="max-width:90px">
+    </div>
+    <button class="btn danger sm" onclick="this.parentElement.remove();updateChanceTotal()" style="margin-top:4px">🗑 O'chirish</button>
+  `;
+  document.getElementById('prizesContainer').appendChild(div);
+  updateChanceTotal();
+}
+
+function updateChanceTotal() {
+  const rows = document.querySelectorAll('#prizesContainer .prize-row');
+  let total = 0;
+  rows.forEach(r => total += parseFloat(r.querySelector('[data-f="chance"]').value) || 0);
+  const el = document.getElementById('chanceTotal');
+  el.textContent = `Jami chance: ${total.toFixed(1)}%`;
+  el.style.color = Math.abs(total - 100) < 0.1 ? 'var(--green)' : 'var(--red)';
+}
+
+async function saveCase() {
+  const name = document.getElementById('caseName').value.trim();
+  const price = document.getElementById('casePrice').value;
+  if (!name || !price) return showToast('❌ Nomi va narx kerak', 'error');
+
+  const rows = document.querySelectorAll('#prizesContainer .prize-row');
+  const prizes = [...rows].map(r => ({
+    name: r.querySelector('[data-f="name"]').value,
+    type: r.querySelector('[data-f="type"]').value,
+    value: r.querySelector('[data-f="value"]').value,
+    rarity: r.querySelector('[data-f="rarity"]').value,
+    chance: parseFloat(r.querySelector('[data-f="chance"]').value) || 0,
+  }));
+  if (!prizes.length || prizes.some(p => !p.name || !p.value)) return showToast('❌ Barcha yutuq maydonlarini to\'ldiring', 'error');
+  const total = prizes.reduce((s,p) => s + p.chance, 0);
+  if (Math.abs(total - 100) > 0.1) return showToast('❌ Chance yig\'indisi 100% bo\'lishi kerak (hozir: ' + total.toFixed(1) + '%)', 'error');
+
+  const isLimited = document.getElementById('caseLimitedToggle').classList.contains('on');
+  const fd = new FormData();
+  fd.append('name', name);
+  fd.append('price_rm', price);
+  fd.append('is_limited', isLimited ? 'true' : 'false');
+  fd.append('total_supply', isLimited ? (document.getElementById('caseSupply').value || -1) : -1);
+  fd.append('image_url', document.getElementById('caseImageUrl').value);
+  fd.append('prizes', JSON.stringify(prizes));
+  const file = document.getElementById('caseFile').files[0];
+  if (file) fd.append('image', file);
+
+  const r = await fetch(API + '/api/cases/admin', { method: 'POST', headers: fdHeaders, body: fd });
+  if (r.ok) {
+    showToast('✅ Case yaratildi!', 'success');
+    closeModal('caseModal');
+    loadCases();
+  } else {
+    const d = await r.json().catch(() => ({}));
+    showToast('❌ ' + (d.error || 'Xato'), 'error');
+  }
+}
+
+async function deleteCase(id) {
+  if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+  await fetch(API + `/api/cases/admin/${id}`, { method: 'DELETE', headers });
+  loadCases();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════════════════════════════
+let searchTimer;
+function searchUsers(q) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const r = await fetch(API + `/api/users/admin/all${q ? '?search='+encodeURIComponent(q) : ''}`, { headers });
+    const users = await r.json();
+    const el = document.getElementById('usersList');
+    if (!users.length) { el.innerHTML = '<div class="empty">Topilmadi</div>'; return; }
+    el.innerHTML = users.map(u => `
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">${u.first_name || '—'} ${u.username ? '@'+u.username : ''}</div>
+            <div class="card-sub">🆔 ${u.telegram_id} • 🪙 ${u.rm_coins.toFixed(2)} • ⭐ ${u.stars.toFixed(0)} • 💵 ${u.uzs.toFixed(0)}</div>
+          </div>
+          ${u.is_banned ? '<span class="badge red">BANNED</span>' : '<span class="badge green">Active</span>'}
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <button class="btn secondary sm" onclick="openUserModal(${u.telegram_id},'${(u.first_name||'').replace(/'/g,"")}','${u.username||''}',${u.rm_coins},${u.stars},${u.uzs},${u.is_banned})">💰 Balans / Ban</button>
+        </div>
+      </div>
+    `).join('');
+  }, 300);
+}
+
+function openUserModal(tgId, name, username, rm, stars, uzs, banned) {
+  document.getElementById('userTgId').value = tgId;
+  document.getElementById('userModalInfo').textContent = `${name} ${username?'@'+username:''} (${tgId}) — 🪙${rm.toFixed(2)} ⭐${stars.toFixed(0)} 💵${uzs.toFixed(0)}`;
+  document.getElementById('userRmDelta').value = '';
+  document.getElementById('userStarsDelta').value = '';
+  document.getElementById('userUzsDelta').value = '';
+  document.getElementById('banBtn').textContent = banned ? '✅ Unban' : '🚫 Ban';
+  document.getElementById('banBtn').dataset.banned = banned;
+  document.getElementById('userModal').classList.add('show');
+}
+
+async function saveUserBalance() {
+  const tgId = parseInt(document.getElementById('userTgId').value);
+  const rm = parseFloat(document.getElementById('userRmDelta').value) || 0;
+  const stars = parseFloat(document.getElementById('userStarsDelta').value) || 0;
+  const uzs = parseFloat(document.getElementById('userUzsDelta').value) || 0;
+  const r = await fetch(API + '/api/users/admin/balance', { method: 'POST', headers, body: JSON.stringify({ telegram_id: tgId, rm_delta: rm, stars_delta: stars, uzs_delta: uzs }) });
+  if (r.ok) { showToast('✅ Yangilandi!', 'success'); closeModal('userModal'); searchUsers(''); }
+  else showToast('❌ Xato', 'error');
+}
+
+async function toggleBan() {
+  const tgId = parseInt(document.getElementById('userTgId').value);
+  const banned = document.getElementById('banBtn').dataset.banned === 'true';
+  const r = await fetch(API + '/api/users/admin/ban', { method: 'POST', headers, body: JSON.stringify({ telegram_id: tgId, ban: !banned }) });
+  if (r.ok) { showToast('✅ Yangilandi!', 'success'); closeModal('userModal'); searchUsers(''); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ORDERS
+// ═══════════════════════════════════════════════════════════════════
+async function loadOrders(status) {
+  const r = await fetch(API + `/api/orders/admin/all${status?'?status='+status:''}`, { headers });
+  const orders = await r.json();
+  const el = document.getElementById('ordersList');
+  if (!orders.length) { el.innerHTML = '<div class="empty">Buyurtma yo\'q</div>'; return; }
+  el.innerHTML = orders.map(o => `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${o.gift_name || '—'}</div>
+          <div class="card-sub">👤 ${o.username?'@'+o.username:o.u_tg_id} • 🪙 ${o.amount_rm} • ${o.pay_with}</div>
+          <div class="card-sub">${new Date(o.created_at).toLocaleString('uz-UZ')}</div>
+          ${o.error_msg ? `<div class="card-sub" style="color:var(--red)">⚠️ ${o.error_msg}</div>` : ''}
+        </div>
+        <span class="badge ${o.status==='success'?'green':o.status==='pending'?'gold':'red'}">${o.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAYMENTS
+// ═══════════════════════════════════════════════════════════════════
+async function loadPayments(status) {
+  const r = await fetch(API + `/api/payments/admin/all${status?'?status='+status:''}`, { headers });
+  const pmts = await r.json();
+  const el = document.getElementById('paymentsList');
+  if (!pmts.length) { el.innerHTML = '<div class="empty">To\'lov so\'rovi yo\'q</div>'; return; }
+  el.innerHTML = pmts.map(p => `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${p.amount_uzs.toLocaleString()} so'm → ${p.amount_rm.toFixed(2)} 🪙</div>
+          <div class="card-sub">👤 ${p.username?'@'+p.username:p.telegram_id}</div>
+          <div class="card-sub">${new Date(p.created_at).toLocaleString('uz-UZ')}</div>
+        </div>
+        <span class="badge ${p.status==='approved'?'green':p.status==='rejected'?'red':'gold'}">${p.status}</span>
+      </div>
+      ${p.screenshot_path ? `<img src="${p.screenshot_path}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}
+      ${p.status==='pending' ? `
+        <div class="btn-row" style="margin-top:8px">
+          <button class="btn green sm" onclick="approvePayment(${p.id})">✅ Tasdiqlash</button>
+          <button class="btn danger sm" onclick="rejectPayment(${p.id})">❌ Rad etish</button>
+        </div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function approvePayment(id) {
+  await fetch(API + `/api/payments/admin/${id}/approve`, { method: 'POST', headers, body: JSON.stringify({}) });
+  showToast('✅ Tasdiqlandi!', 'success');
+  loadPayments(null);
+}
+async function rejectPayment(id) {
+  await fetch(API + `/api/payments/admin/${id}/reject`, { method: 'POST', headers, body: JSON.stringify({}) });
+  showToast('❌ Rad etildi', 'error');
+  loadPayments(null);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PROMO
+// ═══════════════════════════════════════════════════════════════════
+async function loadPromos() {
+  const r = await fetch(API + '/api/admin/promo', { headers });
+  const promos = await r.json();
+  const el = document.getElementById('promoList');
+  if (!promos.length) { el.innerHTML = '<div class="empty">Promo kod yo\'q</div>'; return; }
+  el.innerHTML = promos.map(p => `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${p.code}</div>
+          <div class="card-sub">${p.discount_type==='percent'?p.discount_value+'%':p.discount_value+' RM'} • Ishlatilgan: ${p.used_count}/${p.max_uses}</div>
+        </div>
+        <button class="btn danger sm" onclick="deletePromo(${p.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createPromo() {
+  const code = document.getElementById('promoCode').value.trim();
+  const discount_type = document.getElementById('promoType').value;
+  const discount_value = parseFloat(document.getElementById('promoValue').value);
+  const max_uses = parseInt(document.getElementById('promoMax').value) || 100;
+  const expires_at = document.getElementById('promoExpire').value || null;
+  if (!code || !discount_value) return showToast('❌ Kod va qiymat kerak', 'error');
+  const r = await fetch(API + '/api/admin/promo', { method: 'POST', headers, body: JSON.stringify({ code, discount_type, discount_value, max_uses, expires_at }) });
+  if (r.ok) { showToast('✅ Yaratildi!', 'success'); document.getElementById('promoCode').value=''; document.getElementById('promoValue').value=''; loadPromos(); }
+  else { const d = await r.json(); showToast('❌ ' + (d.error||'Xato'), 'error'); }
+}
+
+async function deletePromo(id) {
+  if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+  await fetch(API + `/api/admin/promo/${id}`, { method: 'DELETE', headers });
+  loadPromos();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACCOUNTS
+// ═══════════════════════════════════════════════════════════════════
+async function loadAccounts() {
+  const r = await fetch(API + '/api/accounts', { headers });
+  const accs = await r.json();
+  const el = document.getElementById('accountsList');
+  if (!accs.length) { el.innerHTML = '<div class="empty">Account yo\'q. Bot API orqali gift yuboriladi.</div>'; return; }
+  el.innerHTML = accs.map(a => `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${a.phone}</div>
+          <div class="card-sub">${a.username?'@'+a.username:''} • Gifts yuborilgan: ${a.gifts_sent}</div>
+        </div>
+        <span class="badge ${a.is_active?'green':'gray'}">${a.is_active?'Faol':'Off'}</span>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn secondary sm" onclick="toggleAccount(${a.id})">${a.is_active?'⏸ O\'chirish':'▶️ Yoqish'}</button>
+        <button class="btn danger sm" onclick="deleteAccount(${a.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function sendOtp() {
+  const phone = document.getElementById('accPhone').value.trim();
+  if (!phone) return showToast('Telefon raqam kiriting', 'error');
+  showToast('⏳ Kod yuborilmoqda...', '');
+  // Kelajakda bu yerda haqiqiy OTP yuborish bo'ladi
+  document.getElementById('otpSection').style.display = 'block';
+  document.getElementById('sendOtpBtn').style.display = 'none';
+  showToast('✅ Kod yuborildi!', 'success');
+}
+
+async function confirmAccount() {
+  const phone = document.getElementById('accPhone').value.trim();
+  const otp = document.getElementById('accOtp').value.trim();
+  if (!otp) return showToast('Kodni kiriting', 'error');
+  
+  const r = await fetch(API + '/api/accounts/manual', { 
+    method: 'POST', headers, body: JSON.stringify({ phone, session_string: 'session_' + otp }) 
+  });
+  if (r.ok) {
+    showToast('✅ Account ulandi!', 'success');
+    document.getElementById('accPhone').value = '';
+    document.getElementById('accOtp').value = '';
+    document.getElementById('otpSection').style.display = 'none';
+    document.getElementById('sendOtpBtn').style.display = 'block';
+    loadAccounts();
+  } else showToast('Xato', 'error');
+}
+
+async function toggleAccount(id) {
+  await fetch(API + `/api/accounts/${id}/toggle`, { method: 'PATCH', headers });
+  loadAccounts();
+}
+async function deleteAccount(id) {
+  if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+  await fetch(API + `/api/accounts/${id}`, { method: 'DELETE', headers });
+  loadAccounts();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CHANNELS
+// ═══════════════════════════════════════════════════════════════════
+async function loadChannels() {
+  const r = await fetch(API + '/api/channels', { headers });
+  const channels = await r.json();
+  const el = document.getElementById('channelsList');
+  if (!channels.length) { el.innerHTML = '<div class="empty">Kanal qo\'shilmagan</div>'; return; }
+  el.innerHTML = channels.map(c => `
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${c.channel_name}</div><div class="card-sub">${c.channel_id}</div></div>
+        <button class="btn danger sm" onclick="deleteChannel(${c.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addChannel() {
+  const channel_id = document.getElementById('chanId').value.trim();
+  const channel_name = document.getElementById('chanName').value.trim();
+  if (!channel_id) return showToast('❌ Kanal ID kerak', 'error');
+  const r = await fetch(API + '/api/channels', { method: 'POST', headers, body: JSON.stringify({ channel_id, channel_name }) });
+  if (r.ok) { showToast('✅ Qo\'shildi!', 'success'); document.getElementById('chanId').value=''; document.getElementById('chanName').value=''; loadChannels(); }
+}
+
+async function deleteChannel(id) {
+  if (!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+  await fetch(API + `/api/channels/${id}`, { method: 'DELETE', headers });
+  loadChannels();
+}
+
+init();
+</script>
+</body>
+</html>

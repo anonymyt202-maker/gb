@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>RM Gift Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0a0d14;--bg2:#111827;--bg3:#1a2235;--bg4:#1f2d45;
+  --accent:#6366f1;--accent2:#818cf8;--gold:#f59e0b;--gold2:#fbbf24;
+  --green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --border:#1e293b;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;padding-bottom:72px}
+
+/* ── Navbar ── */
+.navbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100}
+.navbar::-webkit-scrollbar{display:none}
+.nav-item{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;padding:10px 6px 8px;gap:3px;cursor:pointer;border:none;background:none;color:var(--text2);font-size:10px;font-weight:600;letter-spacing:.3px;transition:color .2s;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-item.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.nav-item .icon{font-size:20px}
+
+/* ── Header ── */
+.header{background:linear-gradient(135deg,var(--bg2),var(--bg3));padding:14px 16px;display:flex;align-items:center;gap:10px}
+.logo-area{display:flex;align-items:center;gap:8px}
+.logo-area img.rm-coin{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.logo-area h1{font-size:16px;font-weight:800;background:linear-gradient(135deg,#6366f1,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.balance-row{display:flex;gap:6px;margin-left:auto}
+.bal{background:var(--bg4);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}
+.bal .val{color:var(--gold2)}
+
+/* ── Pages ── */
+.page{display:none;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}}
+
+/* ── Cards ── */
+.section-title{padding:14px 16px 8px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.gift-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 12px}
+@media(min-width:400px){.gift-grid{grid-template-columns:repeat(3,1fr)}}
+.gift-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.gift-card:active{transform:scale(.97)}
+.gift-card:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.gift-img{width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--bg3),var(--bg4));display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
+.gift-img img{width:100%;height:100%;object-fit:cover}
+.gift-badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);border-radius:8px;padding:2px 6px;font-size:10px;font-weight:700;color:#fff}
+.gift-info{padding:10px}
+.gift-name{font-weight:700;font-size:12px;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gift-price{color:var(--gold2);font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}
+
+/* ── Search ── */
+.search-box{padding:10px 12px}
+.search-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px 10px 38px;color:var(--text);font-size:13px;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.search-input:focus{border-color:var(--accent)}
+.cats{display:flex;gap:6px;padding:0 12px 12px;overflow-x:auto;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid var(--border);background:var(--bg3);color:var(--text2);transition:all .2s}
+.cat.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Detail page ── */
+.detail-top{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:12px 16px;position:sticky;top:0;z-index:50}
+.back-btn{background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:18px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.detail-preview{background:linear-gradient(135deg,var(--bg2),var(--bg3));width:100%;height:220px;display:flex;align-items:center;justify-content:center;font-size:80px}
+.detail-preview img{width:100%;height:100%;object-fit:contain}
+.detail-body{padding:16px}
+.detail-name{font-size:22px;font-weight:800;margin-bottom:6px}
+.price-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.price-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700}
+.price-rm{background:rgba(245,158,11,.15);color:var(--gold2);border:1px solid rgba(245,158,11,.3)}
+.price-uzs{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.detail-desc{color:var(--text2);font-size:13px;line-height:1.7;margin-bottom:16px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:6px;letter-spacing:.5px}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-size:13px;outline:none}
+.form-input:focus{border-color:var(--accent)}
+.radio-group{display:flex;flex-direction:column;gap:6px}
+.radio-opt{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .2s}
+.radio-opt.sel{border-color:var(--accent);background:rgba(99,102,241,.08)}
+.radio-icon{font-size:20px}
+.radio-label{flex:1}
+.radio-name{font-weight:700;font-size:13px}
+.radio-sub{font-size:11px;color:var(--text2)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:12px;margin-bottom:8px}
+.toggle{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on::after{left:23px}
+.promo-row{display:flex;gap:8px;margin-top:8px}
+.promo-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;outline:none}
+.promo-input:focus{border-color:var(--gold)}
+.btn-promo{background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.summary{background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:16px}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;align-items:center}
+.sum-row:last-child{margin-bottom:0;font-weight:700;font-size:15px}
+.sum-row .sum-val{color:var(--gold2)}
+.big-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;font-size:16px;font-weight:800;border:none;border-radius:14px;cursor:pointer;transition:opacity .2s,transform .1s;box-shadow:0 4px 20px rgba(99,102,241,.4)}
+.big-btn:active{transform:scale(.98);opacity:.9}
+.big-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Games ── */
+.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 12px}
+.game-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:transform .15s,border-color .2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.game-card:active{transform:scale(.96)}
+.game-card:hover{border-color:var(--accent)}
+.game-emoji{font-size:36px;line-height:1}
+.game-name{font-weight:700;font-size:13px}
+.game-desc{font-size:10px;color:var(--text2)}
+
+/* ── Mines Game ── */
+.mines-container{padding:12px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.mines-grid-wrapper{background:var(--bg2);padding:10px;border-radius:16px;border:1px solid var(--border)}
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:320px}
+.mines-cell{aspect-ratio:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.mines-cell.open{background:var(--bg4);border-color:var(--accent);cursor:default}
+.mines-cell.mine{background:rgba(239,68,68,.1);border-color:var(--red)}
+.mines-cell.win{background:rgba(16,185,129,.1);border-color:var(--green)}
+.mines-cell .cell-val{font-weight:800;font-size:12px;color:var(--accent2)}
+.mines-cell .cell-bomb{font-size:24px}
+.mines-controls{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px}
+.mines-bet-row{display:flex;gap:8px;align-items:center;background:var(--bg3);padding:10px;border-radius:12px;border:1px solid var(--border)}
+.mines-bet-input{flex:1;background:none;border:none;color:var(--text);font-size:16px;font-weight:700;outline:none;width:50px}
+.mines-bombs-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg3);padding:10px;border-radius:12px;border:1px solid var(--border)}
+.mines-bombs-val{font-weight:800;color:var(--gold2);display:flex;align-items:center;gap:4px}
+.mines-btn{width:100%;padding:14px;border-radius:12px;border:none;font-weight:800;font-size:15px;cursor:pointer;transition:all .2s}
+.mines-btn-start{background:var(--accent);color:#fff}
+.mines-btn-cashout{background:var(--green);color:#fff}
+.mines-btn:disabled{opacity:.5;cursor:not-allowed}
+.mines-stats{display:flex;justify-content:space-between;width:100%;max-width:320px;font-size:12px;font-weight:700;color:var(--text2)}
+.mines-mult{color:var(--gold2)}
+
+/* ── Cases ── */
+.cases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 12px}
+.case-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .2s;position:relative}
+.case-card:active{transform:scale(.97)}
+.case-card:hover{box-shadow:0 0 0 1.5px var(--gold),var(--shadow)}
+.case-img{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;overflow:hidden}
+.case-img img{width:100%;height:100%;object-fit:cover}
+.case-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,.6))}
+.case-limited{position:absolute;top:8px;left:8px;background:var(--red);color:#fff;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;z-index:2}
+.case-info{padding:10px}
+.case-name{font-weight:700;font-size:13px;margin-bottom:4px}
+.case-price{color:var(--gold2);font-size:12px;font-weight:700}
+.case-prizes-preview{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.rarity-dot{width:8px;height:8px;border-radius:50%}
+.rarity-common{background:#6b7280}
+.rarity-rare{background:#3b82f6}
+.rarity-epic{background:#a855f7}
+.rarity-legendary{background:#f59e0b}
+
+/* ── Case opening animation ── */
+.case-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.case-modal.show{opacity:1;pointer-events:all}
+.case-open-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:24px;width:90%;max-width:360px;text-align:center;position:relative;overflow:hidden}
+.case-open-box::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(99,102,241,.4),transparent 70%);animation:glow 2s infinite alternate}
+@keyframes glow{from{opacity:.5}to{opacity:1}}
+.spin-track{width:100%;height:100px;overflow:hidden;border-radius:12px;background:var(--bg3);margin:16px 0;position:relative}
+.spin-track::before,.spin-track::after{content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2}
+.spin-track::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
+.spin-track::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
+.spin-line{position:absolute;top:50%;left:50%;width:2px;height:100%;transform:translateX(-50%);background:var(--gold);z-index:3}
+.spin-inner{display:flex;gap:8px;padding:8px;transition:transform cubic-bezier(.17,.67,.1,1) 4s;width:max-content}
+.spin-item{width:84px;height:84px;background:var(--bg4);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px solid var(--border);flex-shrink:0}
+.spin-item.winner{border-color:var(--gold);background:rgba(245,158,11,.15)}
+.spin-item .si-emoji{font-size:28px}
+.spin-item .si-name{font-size:9px;font-weight:600;color:var(--text2);text-align:center;padding:0 4px;line-height:1.2}
+.prize-reveal{font-size:56px;margin:8px 0;animation:bounce .5s .5s both}
+@keyframes bounce{from{transform:scale(0)}50%{transform:scale(1.2)}to{transform:scale(1)}}
+.prize-name{font-size:18px;font-weight:800;margin-bottom:4px}
+.prize-value{font-size:14px;color:var(--gold2);font-weight:700}
+.modal-close{margin-top:16px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 24px;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;width:100%}
+
+/* ── Profile / Wallet ── */
+.wallet-card{background:linear-gradient(135deg,#1e1b4b,#312e81,#1e3a5f);border-radius:20px;padding:20px;margin:12px;position:relative;overflow:hidden}
+.wallet-card::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,.05);border-radius:50%}
+.wallet-title{font-size:11px;color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.wallet-amount{font-size:32px;font-weight:800;color:#fff;margin-bottom:4px}
+.wallet-sub{font-size:12px;color:rgba(255,255,255,.5)}
+.wallet-balances{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px;padding:0}
+.bal-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px}
+.bal-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px}
+.bal-amount{font-size:20px;font-weight:800}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 12px 12px}
+.act-btn{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:border-color .2s}
+.act-btn:active{opacity:.8}
+.act-btn:hover{border-color:var(--accent)}
+.act-icon{font-size:24px}
+.act-label{font-size:11px;font-weight:600;color:var(--text2)}
+.convert-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin:0 12px 12px;padding:16px}
+.conv-title{font-weight:700;margin-bottom:12px;font-size:14px}
+.conv-rate{font-size:12px;color:var(--text2);margin-bottom:10px}
+.conv-row{display:flex;gap:8px;align-items:center}
+.conv-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none}
+.conv-input:focus{border-color:var(--accent)}
+.conv-btn{background:var(--accent);border:none;border-radius:10px;padding:10px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ── Deposit ── */
+.deposit-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin:0 12px 12px;padding:16px}
+.deposit-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.deposit-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+.card-box{background:linear-gradient(135deg,#1e3a5f,#1e1b4b);border-radius:14px;padding:16px;margin-bottom:12px}
+.card-num{font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:6px;color:#fff}
+.card-holder{font-size:12px;color:rgba(255,255,255,.7)}
+.copy-btn{background:rgba(255,255,255,.1);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:12px;cursor:pointer;margin-top:8px}
+.amount-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-size:16px;font-weight:700;outline:none;margin-bottom:8px}
+.amount-input:focus{border-color:var(--gold)}
+.rm-preview{font-size:12px;color:var(--gold2);margin-bottom:12px}
+
+/* ── Referral ── */
+.ref-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;margin:0 12px 12px;padding:16px}
+.ref-link-box{background:var(--bg3);border-radius:12px;padding:12px;margin:10px 0;display:flex;align-items:center;gap:8px}
+.ref-link{flex:1;font-size:12px;color:var(--accent2);word-break:break-all}
+.ref-copy{background:var(--accent);border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ref-stat{background:var(--bg3);border-radius:12px;padding:12px;text-align:center}
+.ref-stat-val{font-size:22px;font-weight:800;color:var(--gold2)}
+.ref-stat-label{font-size:10px;color:var(--text2);margin-top:2px}
+
+/* ── Promo ── */
+.promo-section{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin:0 12px 12px;padding:16px}
+.promo-row2{display:flex;gap:8px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,40,60,.95);backdrop-filter:blur(10px);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+/* ── Orders ── */
+.orders-list{padding:0 12px}
+.order-item{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px}
+.order-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order-gift{font-weight:700;font-size:14px}
+.status-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.status-success{background:rgba(16,185,129,.15);color:var(--green)}
+.status-pending{background:rgba(245,158,11,.15);color:var(--gold)}
+.status-failed{background:rgba(239,68,68,.15);color:var(--red)}
+.order-meta{font-size:12px;color:var(--text2)}
+
+/* ── Channel check ── */
+.channel-wall{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.channel-wall h2{font-size:22px;font-weight:800;margin-bottom:8px}
+.channel-wall p{color:var(--text2);font-size:14px;margin-bottom:20px}
+.channel-links{display:flex;flex-direction:column;gap:8px;width:100%;margin-bottom:16px}
+.channel-btn{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;color:var(--text);text-decoration:none;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.check-btn{background:var(--accent);border:none;border-radius:14px;padding:14px 24px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;width:100%}
+
+/* ── Loading ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text2)}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- Channel Check Wall -->
+<div class="channel-wall" id="channelWall" style="display:none">
+  <div style="font-size:52px;margin-bottom:16px">📣</div>
+  <h2>Kanallarga obuna bo'ling</h2>
+  <p>Botdan foydalanish uchun quyidagi kanallarga a'zo bo'ling</p>
+  <div class="channel-links" id="channelLinks"></div>
+  <button class="check-btn" onclick="checkChannels()">✅ Tekshirish</button>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar" id="mainNav" style="display:none">
+  <button class="nav-item active" data-page="shop" onclick="switchPage('shop',this)">
+    <span class="icon">🎁</span>Shop
+  </button>
+  <button class="nav-item" data-page="cases" onclick="switchPage('cases',this)">
+    <span class="icon">📦</span>Cases
+  </button>
+  <button class="nav-item" data-page="games" onclick="switchPage('games',this)">
+    <span class="icon">🎮</span>O'yinlar
+  </button>
+  <button class="nav-item" data-page="wallet" onclick="switchPage('wallet',this)">
+    <span class="icon">💼</span>Hamyon
+  </button>
+  <button class="nav-item" data-page="profile" onclick="switchPage('profile',this)">
+    <span class="icon">👤</span>Profil
+  </button>
+</nav>
+
+<!-- ═══ SHOP PAGE ═══ -->
+<div id="page-shop" class="page">
+  <div class="header">
+    <div class="logo-area">
+      <img src="/static/rm.jpg" class="rm-coin" onerror="this.style.display='none'">
+      <h1>RM Gift Shop</h1>
+    </div>
+    <div class="balance-row">
+      <div class="bal">🪙 <span class="val" id="hdrRm">0</span></div>
+      <div class="bal">⭐ <span class="val" id="hdrStars">0</span></div>
+    </div>
+  </div>
+  <div class="search-box">
+    <input class="search-input" id="searchInput" placeholder="Gift qidirish..." oninput="filterGifts()">
+  </div>
+  <div class="cats" id="catList"></div>
+  <div class="gift-grid" id="giftGrid"><div class="loading" style="grid-column:span 2"><div class="spinner"></div>Yuklanmoqda...</div></div>
+</div>
+
+<!-- ═══ GIFT DETAIL PAGE ═══ -->
+<div id="page-detail" class="page">
+  <div class="detail-top">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <span style="font-weight:700" id="detailTitle"></span>
+  </div>
+  <div class="detail-preview" id="detailPreview"></div>
+  <div class="detail-body">
+    <div class="detail-name" id="detailName"></div>
+    <div class="price-row">
+      <span class="price-chip price-rm" id="detailRm"></span>
+      <span class="price-chip price-uzs" id="detailUzs"></span>
+    </div>
+    <div class="detail-desc" id="detailDesc"></div>
+
+    <div class="form-group">
+      <div class="form-label">Kimga yuborish</div>
+      <input class="form-input" id="targetInput" placeholder="Telegram ID yoki @username (bo'sh — o'zingizga)">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">To'lov usuli</div>
+      <div class="radio-group" id="payGroup">
+        <label class="radio-opt sel" onclick="selectPay('rm',this)">
+          <span class="radio-icon">🪙</span>
+          <div class="radio-label"><div class="radio-name">RM Coin</div><div class="radio-sub" id="payRmSub"></div></div>
+          <input type="radio" name="pay" value="rm" checked style="display:none">
+        </label>
+        <label class="radio-opt" onclick="selectPay('stars',this)">
+          <span class="radio-icon">⭐</span>
+          <div class="radio-label"><div class="radio-name">Stars</div><div class="radio-sub" id="payStarsSub"></div></div>
+          <input type="radio" name="pay" value="stars" style="display:none">
+        </label>
+        <label class="radio-opt" onclick="selectPay('uzs',this)">
+          <span class="radio-icon">💵</span>
+          <div class="radio-label"><div class="radio-name">UZS (so'm)</div><div class="radio-sub" id="payUzsSub"></div></div>
+          <input type="radio" name="pay" value="uzs" style="display:none">
+        </label>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div><div style="font-weight:600">Anonimlik</div><div style="font-size:11px;color:var(--text2)">Ismingiz ko'rsatilmaydi</div></div>
+      <div class="toggle" id="anonToggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Izoh (ixtiyoriy)</div>
+      <input class="form-input" id="commentInput" placeholder="Tabrik matni yozing..." maxlength="255">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Promo kod</div>
+      <div class="promo-row">
+        <input class="promo-input" id="promoInput" placeholder="PROMO123" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn-promo" onclick="checkPromo()">Tekshirish</button>
+      </div>
+      <div id="promoMsg" style="font-size:12px;margin-top:6px"></div>
+    </div>
+
+    <div class="summary">
+      <div class="sum-row"><span>Narx</span><span class="sum-val" id="sumPrice"></span></div>
+      <div class="sum-row" id="sumDiscountRow" style="display:none"><span>Chegirma</span><span style="color:var(--green)" id="sumDiscount"></span></div>
+      <div class="sum-row"><span>Jami</span><span class="sum-val" id="sumTotal"></span></div>
+    </div>
+
+    <button class="big-btn" id="buyBtn" onclick="buyGift()">🎁 Gift Sotib Olish</button>
+  </div>
+</div>
+
+<!-- ═══ CASES PAGE ═══ -->
+<div id="page-cases" class="page">
+  <div class="header">
+    <div class="logo-area"><h1>📦 Cases</h1></div>
+    <div class="balance-row">
+      <div class="bal">🪙 <span class="val" id="caseRm">0</span></div>
+    </div>
+  </div>
+  <p style="padding:8px 14px;font-size:12px;color:var(--text2)">Case oching va sovrinlar yutib oling!</p>
+  <div class="cases-grid" id="casesGrid"><div class="loading" style="grid-column:span 2"><div class="spinner"></div>Yuklanmoqda...</div></div>
+</div>
+
+<!-- ═══ MINES PAGE ═══ -->
+<div id="page-mines" class="page">
+  <div class="detail-top">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div style="font-weight:800;font-size:16px">💣 Mines</div>
+  </div>
+  <div class="mines-container">
+    <div class="mines-stats">
+      <span>Tikish: <span id="minesDisplayBet">0</span> 🪙</span>
+      <span>Multi: <span id="minesDisplayMult" class="mines-mult">x1.00</span></span>
+    </div>
+    <div class="mines-grid-wrapper">
+      <div id="minesGrid" class="mines-grid"></div>
+    </div>
+    <div class="mines-controls">
+      <div class="mines-bet-row">
+        <span style="font-size:18px">🪙</span>
+        <input type="number" id="minesBetInput" class="mines-bet-input" value="10" min="1">
+        <div style="display:flex;gap:4px">
+          <button class="btn-promo" onclick="adjustMinesBet(0.5)">1/2</button>
+          <button class="btn-promo" onclick="adjustMinesBet(2)">x2</button>
+        </div>
+      </div>
+      <div class="mines-bombs-row">
+        <span>Bombalar soni:</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="back-btn" style="width:28px;height:28px;font-size:14px" onclick="adjustMinesBombs(-1)">-</button>
+          <span id="minesBombsCount" class="mines-bombs-val">3 💣</span>
+          <button class="back-btn" style="width:28px;height:28px;font-size:14px" onclick="adjustMinesBombs(1)">+</button>
+        </div>
+      </div>
+      <button id="minesMainBtn" class="mines-btn mines-btn-start" onclick="handleMinesMainAction()">O'YINNI BOSHLASH</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CASE DETAIL PAGE ═══ -->
+<div id="page-case-detail" class="page">
+  <div class="detail-top">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div id="caseDetailTitle" style="font-weight:800;font-size:16px">Case Nomi</div>
+  </div>
+  <div class="detail-preview" id="caseDetailImg">📦</div>
+  <div class="detail-body">
+    <div class="detail-name" id="caseDetailName">Case Nomi</div>
+    <div class="price-row">
+      <div class="price-chip price-rm" id="caseDetailPrice">🪙 0 RM</div>
+    </div>
+    <div class="section-title" style="padding:10px 0">Yutuqlar:</div>
+    <div id="casePrizesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    <button class="big-btn" id="openCaseBtn" onclick="startCaseOpening()">Ochish (Open Case)</button>
+  </div>
+</div>
+
+<!-- ═══ CASE OPEN MODAL ═══ -->
+<div class="case-modal" id="caseModal">
+  <div class="case-open-box">
+    <div id="caseOpenTitle" style="font-size:18px;font-weight:800;margin-bottom:8px"></div>
+    <div id="caseOpenPrice" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+    <div class="spin-track" id="spinTrack">
+      <div class="spin-line"></div>
+      <div class="spin-inner" id="spinInner"></div>
+    </div>
+    <div id="prizeReveal" style="display:none;text-align:center;padding:8px 0">
+      <div class="prize-reveal" id="prizeEmoji">🎁</div>
+      <div class="prize-name" id="prizeName"></div>
+      <div class="prize-value" id="prizeVal"></div>
+      <div id="prizeDelivery" style="font-size:11px;color:var(--text2);margin-top:6px"></div>
+    </div>
+    <div id="spinLoading" style="text-align:center;padding:8px 0;color:var(--text2)">Aylantirilmoqda...</div>
+    <button class="modal-close" id="caseCloseBtn" onclick="closeCaseModal()" style="display:none">✅ Yopish</button>
+  </div>
+</div>
+
+<!-- ═══ GAMES PAGE ═══ -->
+<div id="page-games" class="page">
+  <div class="header">
+    <div class="logo-area"><h1>🎮 O'yinlar</h1></div>
+    <div class="balance-row"><div class="bal">🪙 <span class="val" id="gameRm">0</span></div></div>
+  </div>
+  <div class="section-title">Telegram O'yinlar (Bot orqali)</div>
+  <p style="padding:0 14px 12px;font-size:12px;color:var(--text2)">O'ynash uchun botni oching — natijalar RM Coin hisobidan olinadi</p>
+  <div class="games-grid">
+    <div class="game-card" onclick="openBot('dice')"><div class="game-emoji">🎲</div><div class="game-name">Zar</div><div class="game-desc">6→2× | 5→1.5× | 4→1×</div></div>
+    <div class="game-card" onclick="openBot('football')"><div class="game-emoji">⚽</div><div class="game-name">Futbol</div><div class="game-desc">3-5→1.44× | loss</div></div>
+    <div class="game-card" onclick="openBot('basketball')"><div class="game-emoji">🏀</div><div class="game-name">Basketbol</div><div class="game-desc">4-5→1.5× | loss</div></div>
+    <div class="game-card" onclick="openBot('darts')"><div class="game-emoji">🎯</div><div class="game-name">Darts</div><div class="game-desc">6→2× | 4-5→1.5×</div></div>
+    <div class="game-card" onclick="openBot('slots')"><div class="game-emoji">🎰</div><div class="game-name">Slotlar</div><div class="game-desc">777→5× | kunlik</div></div>
+    <div class="game-card" onclick="openGame('coin')"><div class="game-emoji">🪙</div><div class="game-name">Coin Flip</div><div class="game-desc">50% → 1.9×</div></div>
+    <div class="game-card" onclick="openGame('mines')"><div class="game-emoji">💣</div><div class="game-name">Mines</div><div class="game-desc">Bombadan saqlaning!</div></div>
+    <div class="game-card" onclick="openBot('daily')"><div class="game-emoji">🎁</div><div class="game-name">Kunlik Bonus</div><div class="game-desc">1-3 🪙 RM Coin</div></div>
+  </div>
+  <div class="section-title" style="margin-top:8px">O'yin tarixi</div>
+  <div id="gameHistory" class="orders-list">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<!-- ═══ WALLET PAGE ═══ -->
+<div id="page-wallet" class="page">
+  <div class="wallet-card">
+    <div class="wallet-title">Asosiy Balans</div>
+    <div class="wallet-amount">🪙 <span id="wltRm">0</span></div>
+    <div class="wallet-sub">RM Coin • 1 🪙 = 150 so'm = 1 ⭐</div>
+  </div>
+  <div class="wallet-balances">
+    <div class="bal-card">
+      <div class="bal-label">Stars ⭐</div>
+      <div class="bal-amount" id="wltStars">0</div>
+    </div>
+    <div class="bal-card">
+      <div class="bal-label">UZS 💵</div>
+      <div class="bal-amount" id="wltUzs">0</div>
+    </div>
+  </div>
+  <div class="action-btns">
+    <div class="act-btn" onclick="switchSection('deposit')"><div class="act-icon">💳</div><div class="act-label">Pul Kiritish</div></div>
+    <div class="act-btn" onclick="switchSection('convert')"><div class="act-icon">🔄</div><div class="act-label">Konvertatsiya</div></div>
+  </div>
+
+  <!-- Deposit -->
+  <div id="sec-deposit" class="deposit-card" style="display:none">
+    <div class="deposit-title">💳 Pul Kiritish</div>
+    <div class="deposit-sub">Quyidagi kartaga pul o'tkazing, screenshot yuboring</div>
+    <div class="card-box">
+      <div class="card-num" id="cardNum">0000 0000 0000 0000</div>
+      <div class="card-holder" id="cardHolder">KARTA EGASI</div>
+      <button class="copy-btn" onclick="copyCard()">📋 Nusxalash</button>
+    </div>
+    <input type="number" class="amount-input" id="depositAmt" placeholder="Summa (so'm)" oninput="updateRmPreview()">
+    <div class="rm-preview" id="rmPreview">≈ 0 🪙 RM Coin olasiz</div>
+    <input type="file" id="screenshotFile" accept="image/*" style="display:none" onchange="handleScreenshot(event)">
+    <button class="big-btn" style="margin-bottom:10px" onclick="document.getElementById('screenshotFile').click()">📷 Screenshot Yuklash</button>
+    <div id="screenshotName" style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center"></div>
+    <button class="big-btn" onclick="submitDeposit()">✅ Tasdiqlash uchun Yuborish</button>
+  </div>
+
+  <!-- Convert -->
+  <div id="sec-convert" class="convert-box" style="display:none">
+    <div class="conv-title">🔄 Konvertatsiya</div>
+    <div class="conv-rate">Kurs: 1 🪙 RM = <span id="cvRmStars">1</span> ⭐ Stars = <span id="cvRmUzs">150</span> so'm</div>
+    <div style="margin-bottom:10px">
+      <div class="form-label" style="margin-bottom:6px">RM → Stars</div>
+      <div class="conv-row">
+        <input type="number" class="conv-input" id="cvRmToStarsAmt" placeholder="RM miqdori">
+        <button class="conv-btn" onclick="convert('rm_to_stars')">⭐ Stars</button>
+      </div>
+    </div>
+    <div>
+      <div class="form-label" style="margin-bottom:6px">RM → UZS</div>
+      <div class="conv-row">
+        <input type="number" class="conv-input" id="cvRmToUzsAmt" placeholder="RM miqdori">
+        <button class="conv-btn" onclick="convert('rm_to_uzs')">💵 UZS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment history -->
+  <div class="section-title">To'lov Tarixi</div>
+  <div id="paymentHistory" class="orders-list">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ═══ PROFILE PAGE ═══ -->
+<div id="page-profile" class="page">
+  <div class="header">
+    <div class="logo-area"><h1>👤 Profil</h1></div>
+  </div>
+
+  <div class="navbar" style="position:static;margin-bottom:10px;border-top:1px solid var(--border)">
+    <button class="nav-item active" id="profTabOrders" onclick="switchProfTab('orders')">🛍 Xaridlar</button>
+    <button class="nav-item" id="profTabInv" onclick="switchProfTab('inventory')">🎒 Inventory</button>
+  </div>
+
+  <!-- User info -->
+  <div style="padding:12px">
+    <div id="profSecOrders">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px">
+        <div style="font-size:18px;font-weight:800" id="profName">-</div>
+        <div style="font-size:13px;color:var(--text2)" id="profUsername">-</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">🆔 <span id="profId"></span></div>
+      </div>
+
+    <!-- Referral -->
+    <div class="ref-card">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">👥 Do'stlarni taklif qilish</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+        Har bir do'st uchun: <b>+<span id="refReward">1</span> 🪙</b><br>
+        Do'stingiz gift olganda: <b>+1% RM Coin</b>
+      </div>
+      <div class="ref-link-box">
+        <span class="ref-link" id="refLink">-</span>
+        <button class="ref-copy" onclick="copyRef()">Nusxa</button>
+      </div>
+      <div class="ref-stats">
+        <div class="ref-stat"><div class="ref-stat-val" id="refCount">0</div><div class="ref-stat-label">Do'stlar</div></div>
+        <div class="ref-stat"><div class="ref-stat-val" id="profPurchases">0</div><div class="ref-stat-label">Xaridlar</div></div>
+      </div>
+    </div>
+
+    <!-- Promo -->
+    <div class="promo-section">
+      <div style="font-weight:700;margin-bottom:10px">🎟 Promo Kod</div>
+      <div class="promo-row2">
+        <input class="promo-input" id="profilePromo" placeholder="PROMO123" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn-promo" onclick="applyPromo()">✅ Qo'llash</button>
+      </div>
+      <div id="profilePromoMsg" style="font-size:12px;margin-top:6px"></div>
+    </div>
+
+    <!-- Orders -->
+    <div class="section-title" style="padding:14px 0 8px">🛍 Xaridlar Tarixi</div>
+    <div id="myOrders" class="orders-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+    </div>
+
+    <div id="profSecInv" style="display:none">
+      <div class="section-title">🎒 Mening Buyumlarim</div>
+      <div id="myInventory" class="gift-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); tg.setHeaderColor?.('#0a0d14'); tg.setBackgroundColor?.('#0a0d14'); }
+
+const API = '';
+const initData = tg?.initData || '';
+const headers = { 'Content-Type': 'application/json', 'X-Init-Data': initData };
+
+let userData = null, allGifts = [], filteredGifts = [], currentGift = null, payWith = 'rm', promoDiscount = 0, prevPage = 'shop', screenshotFile = null;
+let currentPage = 'shop';
+let minesState = {
+  active: false,
+  bet: 10,
+  bombs: 3,
+  opened: [],
+  revealedMines: [],
+  mult: 1,
+};
+
+// ─── Init ─────────────────────────────────────────────────────────
+async function init() {
+  try {
+    await checkChannelSubscription();
+  } catch(e) {
+    if (e.message === 'CHANNEL_WALL') return; // checkChannels() will re-run init flow
+    showToast('Xato: ' + e.message, 'error');
+  }
+  try {
+    await loadUser();
+    await loadGifts();
+    renderMinesGrid();
+    switchProfTab('orders');
+    document.getElementById('mainNav').style.display = 'flex';
+    document.getElementById('page-shop').classList.add('active');
+    currentPage = 'shop';
+  } catch(e) { showToast('Xato: ' + e.message, 'error'); }
+}
+
+// ─── Channel check ────────────────────────────────────────────────
+async function checkChannelSubscription() {
+  const r = await fetch(API + '/api/channels/check', { headers });
+  const d = await r.json();
+  if (!d.ok && d.channels?.length > 0) {
+    const wall = document.getElementById('channelWall');
+    const links = document.getElementById('channelLinks');
+    wall.style.display = 'flex';
+    links.innerHTML = d.channels.filter(c => !c.is_member).map(c =>
+      `<a href="https://t.me/${c.channel_id.replace('@','')}" target="_blank" class="channel-btn">
+        📣 ${c.channel_name || c.channel_id} <span>→</span>
+      </a>`
+    ).join('');
+    throw new Error('CHANNEL_WALL');
+  }
+}
+
+async function checkChannels() {
+  const r = await fetch(API + '/api/channels/check', { headers });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('channelWall').style.display = 'none';
+    await loadUser();
+    await loadGifts();
+    document.getElementById('mainNav').style.display = 'flex';
+    document.getElementById('page-shop').classList.add('active');
+  } else { showToast('Hali kanallarga a\'zo bo\'lmagansiz!', 'error'); }
+}
+
+// ─── User ─────────────────────────────────────────────────────────
+async function loadUser() {
+  const r = await fetch(API + '/api/users/me', { headers });
+  userData = await r.json();
+  updateBalanceUI();
+}
+
+function updateBalanceUI() {
+  if (!userData) return;
+  const rm = (userData.rm_coins || 0).toFixed(2);
+  const stars = Math.floor(userData.stars || 0);
+  const uzs = Math.floor(userData.uzs || 0);
+  document.getElementById('hdrRm').textContent = rm;
+  document.getElementById('hdrStars').textContent = stars;
+  ['caseRm','gameRm','wltRm'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = rm; });
+  const wStars = document.getElementById('wltStars'); if(wStars) wStars.textContent = stars.toLocaleString();
+  const wUzs = document.getElementById('wltUzs'); if(wUzs) wUzs.textContent = uzs.toLocaleString();
+  const cardNum = document.getElementById('cardNum'); if(cardNum) cardNum.textContent = formatCard(userData.card_number || '');
+  const cardHolder = document.getElementById('cardHolder'); if(cardHolder) cardHolder.textContent = userData.card_holder || '';
+  const cvRmStars = document.getElementById('cvRmStars'); if(cvRmStars) cvRmStars.textContent = userData.rm_to_stars || 1;
+  const cvRmUzs = document.getElementById('cvRmUzs'); if(cvRmUzs) cvRmUzs.textContent = userData.rm_to_uzs || 150;
+  // Profile
+  const pn = document.getElementById('profName'); if(pn) pn.textContent = userData.first_name || 'Foydalanuvchi';
+  const pu = document.getElementById('profUsername'); if(pu) pu.textContent = userData.username ? '@'+userData.username : '';
+  const pi = document.getElementById('profId'); if(pi) pi.textContent = userData.telegram_id;
+  const rl = document.getElementById('refLink'); if(rl) rl.textContent = userData.referral_link || '';
+  const rc = document.getElementById('refCount'); if(rc) rc.textContent = userData.referral_count || 0;
+  const pp = document.getElementById('profPurchases'); if(pp) pp.textContent = userData.purchases_count || 0;
+  const rr = document.getElementById('refReward'); if(rr) rr.textContent = userData.referral_reward ?? 1;
+}
+
+function formatCard(num) {
+  return num.replace(/(\d{4})/g,'$1 ').trim();
+}
+
+// ─── Gifts ────────────────────────────────────────────────────────
+async function loadGifts() {
+  const r = await fetch(API + '/api/gifts', { headers });
+  allGifts = await r.json();
+  filteredGifts = [...allGifts];
+  renderGifts();
+  loadCategories();
+}
+
+function loadCategories() {
+  const cats = ['Barchasi', ...new Set(allGifts.map(g => g.category).filter(Boolean))];
+  document.getElementById('catList').innerHTML = cats.map((c,i) =>
+    `<button class="cat ${i===0?'active':''}" onclick="filterCat('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filteredGifts = cat === 'Barchasi' ? [...allGifts] : allGifts.filter(g => g.category === cat);
+  renderGifts();
+}
+
+function filterGifts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  filteredGifts = allGifts.filter(g => g.name.toLowerCase().includes(q));
+  renderGifts();
+}
+
+function renderGifts() {
+  const grid = document.getElementById('giftGrid');
+  if (!filteredGifts.length) { grid.innerHTML = '<div class="empty" style="grid-column:span 2"><div class="empty-icon">🔍</div>Gift topilmadi</div>'; return; }
+  grid.innerHTML = filteredGifts.map(g => `
+    <div class="gift-card" onclick="openGift(${g.id})">
+      <div class="gift-img">
+        ${g.image_url || g.file_path || g.sticker_url
+          ? `<img src="${g.image_url || g.file_path || g.sticker_url}" loading="lazy">`
+          : '🎁'}
+        ${g.stock > 0 ? `<span class="gift-badge">📦 ${g.stock}</span>` : g.stock === 0 ? '<span class="gift-badge" style="background:rgba(239,68,68,.8)">Tugadi</span>' : ''}
+      </div>
+      <div class="gift-info">
+        <div class="gift-name">${g.name}</div>
+        <div class="gift-price">🪙 ${g.price_rm}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openGift(id) {
+  const g = allGifts.find(x => x.id === id);
+  if (!g) return;
+  currentGift = g;
+  prevPage = 'shop';
+  promoDiscount = 0;
+  document.getElementById('promoInput').value = '';
+  document.getElementById('promoMsg').innerHTML = '';
+  document.getElementById('sumDiscountRow').style.display = 'none';
+
+  document.getElementById('detailTitle').textContent = g.name;
+  document.getElementById('detailPreview').innerHTML = g.image_url || g.file_path
+    ? `<img src="${g.image_url || g.file_path}" style="width:100%;height:100%;object-fit:contain">`
+    : `<span style="font-size:80px">🎁</span>`;
+  document.getElementById('detailName').textContent = g.name;
+  document.getElementById('detailRm').textContent = `🪙 ${g.price_rm} RM`;
+  document.getElementById('detailUzs').textContent = `💵 ${(g.price_rm * (userData?.rm_to_uzs || 150)).toLocaleString()} so'm`;
+  document.getElementById('detailDesc').textContent = g.description || 'Premium Telegram gift';
+  document.getElementById('payRmSub').textContent = `Sizda: ${(userData?.rm_coins || 0).toFixed(2)} 🪙`;
+  document.getElementById('payStarsSub').textContent = `Sizda: ${Math.floor(userData?.stars || 0)} ⭐ • Narx: ${g.price_rm * (userData?.rm_to_stars || 1)} ⭐`;
+  document.getElementById('payUzsSub').textContent = `Sizda: ${Math.floor(userData?.uzs || 0).toLocaleString()} so'm • Narx: ${(g.price_rm * (userData?.rm_to_uzs || 150)).toLocaleString()} so'm`;
+
+  updateSummary();
+  switchPageDirect('detail');
+}
+
+function selectPay(val, el) {
+  payWith = val;
+  document.querySelectorAll('.radio-opt').forEach(r => r.classList.remove('sel'));
+  el.classList.add('sel');
+  updateSummary();
+}
+
+function updateSummary() {
+  if (!currentGift) return;
+  const price = currentGift.price_rm;
+  const discounted = Math.max(1, price - promoDiscount);
+  document.getElementById('sumPrice').textContent = `🪙 ${price} RM`;
+  document.getElementById('sumTotal').textContent = `🪙 ${discounted} RM`;
+  if (promoDiscount > 0) {
+    document.getElementById('sumDiscountRow').style.display = 'flex';
+    document.getElementById('sumDiscount').textContent = `-🪙 ${promoDiscount.toFixed(2)}`;
+  }
+}
+
+async function checkPromo() {
+  const code = document.getElementById('promoInput').value.trim();
+  if (!code) return;
+  // Client-side promo check — order time'da tekshiriladi
+  document.getElementById('promoMsg').innerHTML = `<span style="color:var(--gold2)">✅ Promo kod qo'shildi</span>`;
+}
+
+async function buyGift() {
+  if (!currentGift) return;
+  const btn = document.getElementById('buyBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Buyurtma berilmoqda...';
+  try {
+    const target = document.getElementById('targetInput').value.trim();
+    const anon = document.getElementById('anonToggle').classList.contains('on');
+    const comment = document.getElementById('commentInput').value.trim();
+    const promo = document.getElementById('promoInput').value.trim();
+    const body = {
+      gift_id: currentGift.id,
+      pay_with: payWith,
+      anonymous: anon,
+      comment: comment || null,
+      promo_code: promo || null,
+    };
+    if (target) {
+      if (/^\d+$/.test(target)) body.target_telegram_id = parseInt(target);
+      else body.target_username = target.replace('@','');
+    }
+    const r = await fetch(API + '/api/orders', { method: 'POST', headers, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('🎉 Gift muvaffaqiyatli yuborildi!', 'success');
+      await loadUser();
+      goBack();
+    } else {
+      showToast('❌ ' + (d.error || d.detail || 'Xato'), 'error');
+    }
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.textContent = '🎁 Gift Sotib Olish';
+}
+
+// ─── Cases ────────────────────────────────────────────────────────
+let currentCase = null;
+
+async function loadCases() {
+  const r = await fetch(API + '/api/cases', { headers });
+  const cases = await r.json();
+  const grid = document.getElementById('casesGrid');
+  if (!cases.length) { grid.innerHTML = '<div class="empty" style="grid-column:span 2"><div class="empty-icon">📦</div>Hozircha case yo\'q</div>'; return; }
+
+  const rarityColor = { common: '#6b7280', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' };
+  grid.innerHTML = cases.map(c => `
+    <div class="case-card" onclick="showCaseDetail(${c.id})">
+      ${c.is_limited ? '<span class="case-limited">🔥 LIMITED</span>' : ''}
+      <div class="case-img">
+        ${c.image_url ? `<img src="${c.image_url}" loading="lazy">` : '📦'}
+      </div>
+      <div class="case-info">
+        <div class="case-name">${c.name}</div>
+        <div class="case-price">🪙 ${c.price_rm} RM</div>
+        ${c.is_limited && c.total_supply > 0 ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">📦 ${c.total_supply - c.opened_count} / ${c.total_supply}</div>` : ''}
+        <div class="case-prizes-preview">
+          ${(c.prizes || []).slice(0,8).map(p => `<div class="rarity-dot" style="background:${rarityColor[p.rarity]||'#6b7280'}" title="${p.name}"></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function showCaseDetail(caseId) {
+  const r = await fetch(API + '/api/cases', { headers });
+  const cases = await r.json();
+  const c = cases.find(x => x.id === caseId);
+  if (!c) return;
+  
+  currentCase = c;
+  prevPage = currentPage;
+  switchPageDirect('case-detail');
+  
+  document.getElementById('caseDetailTitle').textContent = c.name;
+  document.getElementById('caseDetailName').textContent = c.name;
+  document.getElementById('caseDetailPrice').textContent = `🪙 ${c.price_rm} RM`;
+  document.getElementById('caseDetailImg').innerHTML = c.image_url ? `<img src="${c.image_url}">` : '📦';
+  
+  const rarityColor = { common: '#6b7280', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' };
+  const prizeList = document.getElementById('casePrizesList');
+  prizeList.innerHTML = (c.prizes || []).map(p => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);padding:10px;border-radius:12px;border:1px solid var(--border)">
+      <div style="font-size:24px">${p.type==='gift'?'🎁':p.type==='stars'?'⭐':p.type==='nft'?'🖼️':'🪙'}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${p.name}</div>
+        <div style="font-size:11px;color:${rarityColor[p.rarity]}">${p.rarity.toUpperCase()} • ${p.chance}%</div>
+      </div>
+      <div style="font-weight:700;color:var(--gold2)">${p.value}</div>
+    </div>
+  `).join('');
+}
+
+async function startCaseOpening() {
+  if (!currentCase) return;
+  const c = currentCase;
+  if (!userData || userData.rm_coins < c.price_rm) {
+    return showToast(`❌ RM Coin yetarli emas! Kerak: ${c.price_rm} 🪙`, 'error');
+  }
+
+  const modal = document.getElementById('caseModal');
+  document.getElementById('caseOpenTitle').textContent = c.name;
+  document.getElementById('caseOpenPrice').textContent = `💰 ${c.price_rm} 🪙 RM sarflanadi`;
+  document.getElementById('prizeReveal').style.display = 'none';
+  document.getElementById('spinLoading').style.display = 'block';
+  document.getElementById('caseCloseBtn').style.display = 'none';
+
+  // Spin track to'ldirish
+  const prizes = c.prizes || [];
+  const spinItems = [...prizes, ...prizes, ...prizes, ...prizes, ...prizes].sort(() => Math.random() - .5).slice(0, 30);
+  const rarityColorBG = { common: '#374151', rare: '#1e3a5f', epic: '#2e1065', legendary: '#451a03' };
+  document.getElementById('spinInner').innerHTML = spinItems.map(p => `
+    <div class="spin-item" style="border-color:${rarityColorBG[p.rarity]||'#1e293b'};background:${rarityColorBG[p.rarity]||'var(--bg4)'}">
+      <div class="si-emoji">${p.type==='gift'?'🎁':p.type==='stars'?'⭐':p.type==='nft'?'🖼️':'🪙'}</div>
+      <div class="si-name">${p.name}</div>
+    </div>
+  `).join('');
+
+  modal.classList.add('show');
+
+  try {
+    const resp = await fetch(API + `/api/cases/${c.id}/open`, { method: 'POST', headers });
+    const result = await resp.json();
+
+    if (!resp.ok || !result.ok) {
+      modal.classList.remove('show');
+      return showToast('❌ ' + (result.error || 'Xato'), 'error');
+    }
+
+    const inner = document.getElementById('spinInner');
+    const itemWidth = 92; 
+    const targetIdx = 22;
+    inner.style.transition = 'none';
+    inner.style.transform = 'translateX(0px)';
+    await new Promise(r => setTimeout(r, 50));
+    inner.style.transition = 'transform cubic-bezier(.17,.67,.1,1) 3.5s';
+    inner.style.transform = `translateX(-${itemWidth * targetIdx - 120}px)`;
+
+    await new Promise(r => setTimeout(r, 3700));
+
+    const prize = result.prize;
+    document.getElementById('spinLoading').style.display = 'none';
+    document.getElementById('prizeReveal').style.display = 'block';
+    document.getElementById('prizeEmoji').textContent = prize.type==='gift'?'🎁':prize.type==='stars'?'⭐':prize.type==='nft'?'🖼️':'🪙';
+    document.getElementById('prizeName').textContent = prize.name;
+    document.getElementById('prizeVal').textContent = `Qiymat: ${prize.value}`;
+    document.getElementById('prizeDelivery').textContent = prize.delivered
+      ? '✅ Avtomatik yetkazildi!' : '⏳ Inventory ga qo\'shildi!';
+    document.getElementById('caseCloseBtn').style.display = 'block';
+
+    userData.rm_coins = result.new_rm_coins ?? userData.rm_coins;
+    updateBalanceUI();
+  } catch(e) {
+    modal.classList.remove('show');
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+function closeCaseModal() {
+  document.getElementById('caseModal').classList.remove('show');
+  document.getElementById('spinInner').style.transform = 'translateX(0)';
+}
+
+// ─── Wallet actions ───────────────────────────────────────────────
+function switchSection(name) {
+  ['deposit','convert'].forEach(s => {
+    const el = document.getElementById('sec-' + s);
+    if (el) el.style.display = s === name ? 'block' : 'none';
+  });
+  if (name === 'deposit') loadPaymentHistory();
+}
+
+function updateRmPreview() {
+  const amt = parseFloat(document.getElementById('depositAmt').value) || 0;
+  const rm = amt / (userData?.rm_to_uzs || 150);
+  document.getElementById('rmPreview').textContent = `≈ ${rm.toFixed(2)} 🪙 RM Coin olasiz`;
+}
+
+function copyCard() {
+  const num = (document.getElementById('cardNum')?.textContent || '').replace(/\s/g,'');
+  navigator.clipboard?.writeText(num);
+  showToast('✅ Karta nusxalandi!', 'success');
+}
+
+function handleScreenshot(event) {
+  screenshotFile = event.target.files[0];
+  document.getElementById('screenshotName').textContent = screenshotFile ? `📷 ${screenshotFile.name}` : '';
+}
+
+async function submitDeposit() {
+  const amt = parseFloat(document.getElementById('depositAmt').value);
+  if (!amt || amt < 1000) return showToast('❌ Minimal 1000 so\'m', 'error');
+  
+  const fd = new FormData();
+  fd.append('amount_uzs', amt);
+  if (screenshotFile) fd.append('screenshot', screenshotFile);
+  
+  const hdrs = { 'X-Init-Data': initData };
+  try {
+    const r = await fetch(API + '/api/payments/request', { method: 'POST', headers: hdrs, body: fd });
+    const d = await r.json();
+    if (d.ok) {
+      showToast(`✅ So'rov yuborildi! Admin tasdiqlaydi`, 'success');
+      document.getElementById('depositAmt').value = '';
+      screenshotFile = null;
+      document.getElementById('screenshotName').textContent = '';
+      loadPaymentHistory();
+    } else {
+      showToast('❌ ' + (d.error || d.detail), 'error');
+    }
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+}
+
+async function loadPaymentHistory() {
+  const el = document.getElementById('paymentHistory');
+  // Hozircha bo'sh
+  el.innerHTML = '<div class="empty"><div class="empty-icon">💳</div>To\'lov tarixi yo\'q</div>';
+}
+
+async function convert(type) {
+  const amtEl = type === 'rm_to_stars' ? 'cvRmToStarsAmt' : 'cvRmToUzsAmt';
+  const amt = parseFloat(document.getElementById(amtEl).value);
+  if (!amt || amt <= 0) return showToast('❌ Miqdor kiriting', 'error');
+  
+  const r = await fetch(API + '/api/users/convert', { method: 'POST', headers, body: JSON.stringify({ type, amount: amt }) });
+  const d = await r.json();
+  if (d.ok) {
+    showToast(`✅ ${amt} 🪙 → ${d.converted.toFixed(2)} ${d.currency}`, 'success');
+    document.getElementById(amtEl).value = '';
+    await loadUser();
+  } else {
+    showToast('❌ ' + (d.error || d.detail), 'error');
+  }
+}
+
+// ─── Profile ──────────────────────────────────────────────────────
+async function loadMyOrders() {
+  const r = await fetch(API + '/api/orders/my', { headers });
+  const orders = await r.json();
+  const el = document.getElementById('myOrders');
+  if (!orders.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🛍</div>Hali xarid qilmadingiz</div>'; return; }
+  el.innerHTML = orders.map(o => `
+    <div class="order-item">
+      <div class="order-head">
+        <span class="order-gift">${o.gift_name}</span>
+        <span class="status-badge status-${o.status}">${o.status==='success'?'✅':o.status==='pending'?'⏳':'❌'} ${o.status}</span>
+      </div>
+      <div class="order-meta">🪙 ${o.amount_rm} RM • ${new Date(o.created_at).toLocaleDateString('uz-UZ')}</div>
+    </div>
+  `).join('');
+}
+
+function copyRef() {
+  const link = document.getElementById('refLink').textContent;
+  navigator.clipboard?.writeText(link);
+  showToast('✅ Havola nusxalandi!', 'success');
+}
+
+async function applyPromo() {
+  showToast('✅ Promo kod xarid paytida qo\'llaniladi', 'success');
+}
+
+// ─── Games ────────────────────────────────────────────────────────
+function openBot(game) {
+  if (tg) tg.close();
+  else showToast('Bot da o\'ynang!', '');
+}
+
+function openGame(game) {
+  if (game === 'mines') {
+    prevPage = 'games';
+    switchPageDirect('mines');
+    currentPage = 'mines';
+    renderMinesGrid();
+    return;
+  }
+  if (game === 'coin') {
+    return openBot('coin');
+  }
+  showToast('Bu o\'yin hozircha bot orqali ochiladi', '');
+  openBot(game);
+}
+
+function switchProfTab(tab) {
+  const ordersBtn = document.getElementById('profTabOrders');
+  const invBtn = document.getElementById('profTabInv');
+  const ordersSec = document.getElementById('profSecOrders');
+  const invSec = document.getElementById('profSecInv');
+  if (!ordersBtn || !invBtn || !ordersSec || !invSec) return;
+  const isOrders = tab !== 'inventory';
+  ordersBtn.classList.toggle('active', isOrders);
+  invBtn.classList.toggle('active', !isOrders);
+  ordersSec.style.display = isOrders ? 'block' : 'none';
+  invSec.style.display = isOrders ? 'none' : 'block';
+  if (isOrders) loadMyOrders(); else loadInventory();
+}
+
+function adjustMinesBet(mult) {
+  const el = document.getElementById('minesBetInput');
+  if (!el) return;
+  const v = Math.max(1, Math.floor((parseFloat(el.value) || 1) * mult));
+  el.value = String(v);
+  if (!minesState.active) minesState.bet = v;
+}
+
+function adjustMinesBombs(delta) {
+  const next = Math.min(24, Math.max(1, (parseInt(minesState.bombs, 10) || 3) + delta));
+  minesState.bombs = next;
+  const el = document.getElementById('minesBombsCount');
+  if (el) el.textContent = `${next} 💣`;
+}
+
+function renderMinesGrid() {
+  const grid = document.getElementById('minesGrid');
+  const betEl = document.getElementById('minesDisplayBet');
+  const multEl = document.getElementById('minesDisplayMult');
+  const mainBtn = document.getElementById('minesMainBtn');
+  const betInput = document.getElementById('minesBetInput');
+  const bombsCount = document.getElementById('minesBombsCount');
+  if (!grid) return;
+
+  const opened = new Set(minesState.opened || []);
+  const mines = new Set(minesState.revealedMines || []);
+
+  if (betEl) betEl.textContent = (minesState.bet || 0).toFixed(2);
+  if (multEl) multEl.textContent = `x${(minesState.mult || 1).toFixed(2)}`;
+  if (betInput && !minesState.active) betInput.value = String(minesState.bet || 10);
+  if (bombsCount) bombsCount.textContent = `${minesState.bombs || 3} 💣`;
+  if (mainBtn) mainBtn.textContent = minesState.active ? '💰 CASHOUT' : "O'YINNI BOSHLASH";
+
+  const cells = Array.from({ length: 25 }, (_, index) => {
+    const isOpen = opened.has(index);
+    const isMine = mines.has(index);
+    const cls = ['mines-cell'];
+    let content = '';
+
+    if (isMine) {
+      cls.push('mine');
+      content = '<span class="cell-bomb">💣</span>';
+    } else if (isOpen) {
+      cls.push('open', 'win');
+      content = '<span class="cell-val">💎</span>';
+    } else if (!minesState.active) {
+      content = '<span style="opacity:.25">·</span>';
+    }
+
+    const disabled = minesState.active && (isOpen || isMine ? 'disabled' : '');
+    const onclick = minesState.active ? `onclick="openMinesCell(${index})"` : '';
+    return `<button class="${cls.join(' ')}" ${disabled} ${onclick} type="button">${content}</button>`;
+  });
+
+  grid.innerHTML = cells.join('');
+}
+
+async function openMinesCell(index) {
+  if (!minesState.active) return;
+  if (minesState.opened.includes(index)) return;
+
+  try {
+    const r = await fetch(API + '/api/games/mines/open', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ index }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      showToast('❌ ' + (d.error || 'Xato'), 'error');
+      return;
+    }
+
+    if (d.type === 'mine') {
+      minesState.active = false;
+      minesState.revealedMines = d.mines || [];
+      minesState.mult = 1;
+      renderMinesGrid();
+      showToast('💥 Bomba!', 'error');
+      return;
+    }
+
+    minesState.opened.push(index);
+    minesState.mult = d.mult || minesState.mult;
+    renderMinesGrid();
+  } catch (e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+async function handleMinesMainAction() {
+  if (minesState.active) return cashoutMines();
+
+  const bet = parseFloat(document.getElementById('minesBetInput').value);
+  const bombs = parseInt(minesState.bombs, 10) || 3;
+  if (!bet || bet <= 0) return showToast('❌ Tikish miqdorini kiriting', 'error');
+  if (!userData || userData.rm_coins < bet) return showToast('❌ RM Coin yetarli emas', 'error');
+
+  try {
+    const r = await fetch(API + '/api/games/mines/start', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ bet, bombs }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) return showToast('❌ ' + (d.error || 'Xato'), 'error');
+
+    minesState = {
+      active: true,
+      bet,
+      bombs,
+      opened: [],
+      revealedMines: [],
+      mult: 1,
+    };
+    renderMinesGrid();
+    await loadUser();
+    showToast('🎮 O\'yin boshlandi!', 'success');
+  } catch (e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+async function cashoutMines() {
+  if (!minesState.active || !minesState.opened.length) {
+    return showToast('❌ Cashout qilish uchun kamida 1 ta katak oching', 'error');
+  }
+  try {
+    const r = await fetch(API + '/api/games/mines/cashout', { method: 'POST', headers });
+    const d = await r.json();
+    if (!r.ok || !d.ok) return showToast('❌ ' + (d.error || 'Xato'), 'error');
+
+    minesState.active = false;
+    minesState.revealedMines = d.mines || [];
+    minesState.mult = d.win && minesState.bet ? d.win / minesState.bet : minesState.mult;
+    renderMinesGrid();
+    await loadUser();
+    showToast(`✅ ${d.win.toFixed(2)} 🪙 yutding!`, 'success');
+  } catch (e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
+
+async function loadInventory() {
+  const el = document.getElementById('profSecInv');
+  if (!el) return;
+  el.innerHTML = '<div class="empty"><div class="empty-icon">🎒</div>Inventory bo\'limi hozircha tayyor emas</div>';
+}
+
+// ─── Navigation ───────────────────────────────────────────────────
+function switchPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  if (el) el.classList.add('active');
+  
+  if (name === 'cases') loadCases();
+  if (name === 'profile') { loadMyOrders(); }
+  if (name === 'wallet') { switchSection(null); loadPaymentHistory(); }
+}
+
+function switchPageDirect(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+}
+
+function goBack() {
+  switchPageDirect(prevPage);
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === prevPage);
+  });
+}
+
+// ─── Toast ────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── Start ────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
